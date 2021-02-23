@@ -1,4 +1,5 @@
-from django.shortcuts import render, reverse, HttpResponse
+from django.shortcuts import render , HttpResponse
+from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
 from .models import User
 from .forms import UserForm
@@ -12,5 +13,6 @@ def index(request):
 class UserCreate(CreateView):
     model = User
     form_class = UserForm
+    success_url = reverse_lazy('index')
     template_name = 'socialMediaApp/auth.html'
-    success_url = reverse('index')
+
