@@ -1,0 +1,23 @@
+{% extends 'socialMediaApp/base.html' %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block body %}
+    <div>
+        <h1>{{ user.email }} Profile</h1>
+        {% if post_list|length > 0 %}
+            <h2>Posts: </h2>
+            <ul>
+                {% for post in post_list %}
+                    <li><a href="#">{{ post.title }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <h2>There is no post</h2>
+        {% endif %}
+        <a href="#">Add a post</a>
+    </div>
+
+{% endblock %}
