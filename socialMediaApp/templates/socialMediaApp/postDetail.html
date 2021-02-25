@@ -1,0 +1,14 @@
+{% extends 'socialMediaApp/base.html' %}
+
+{% block title %}
+    Post Detail
+{% endblock %}
+
+{% block body %}
+    <div>
+        <h1>Title: </h1>
+        <p>{{ object.title }}</p>
+        <h1>Description: </h1>
+        <p>{{ object.description }}</p>
+    </div>
+{% endblock %}

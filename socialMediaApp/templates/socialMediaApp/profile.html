@@ -1,4 +1,5 @@
 {% extends 'socialMediaApp/base.html' %}
+{% load timeProcess %}
 
 {% block title %}
     Profile
@@ -11,13 +12,40 @@
             <h2>Posts: </h2>
             <ul>
                 {% for post in post_list %}
-                    <li><a href="#">{{ post.title }}</a></li>
+                    <li>
+                        <a href="{% url 'postDetail' user.pk post.pk %}">
+                            {{ post.title }}
+                        </a>
+                        {% timeProcess post.date %}
+                    </li>
                 {% endfor %}
             </ul>
         {% else %}
             <h2>There is no post</h2>
         {% endif %}
-        <a href="#">Add a post</a>
+        <a href="{% url 'createPost' user.pk %}">Add a post</a>
     </div>
-
+    <div>
+        <form method="post">{% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Search">
+        </form>
+    </div>
 {% endblock %}
+
+{% block script %}
+    <script>
+        $(document).ready(function(){
+            $("#txtSearch").autocomplete({
+                source: "/ajax_calls/search/",
+                minLength: 2,
+              });
+        });
+    </script>
+{% endblock %}
+
+
+
+
+
+
