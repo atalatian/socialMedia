@@ -1,16 +1,19 @@
-from django.shortcuts import render, HttpResponse, get_object_or_404, HttpResponseRedirect
+import json
+
+from django.shortcuts import HttpResponse, get_object_or_404, HttpResponseRedirect
 from django.urls import reverse_lazy
-from django.http import HttpResponseForbidden
-from django.views.generic.edit import CreateView, FormView
+from django.views import View
 from django.views.generic import DetailView
+from django.views.generic.base import RedirectView
+from django.views.generic.edit import CreateView, FormView
 from django.views.generic.edit import FormMixin
-from .models import User
-from .models import Post
-from .forms import UserForm
+
 from .forms import PostForm
 from .forms import SearchForm
-from django.views import View
-import json
+from .forms import UserForm
+from .models import Post
+from .models import User
+from .models import UserJoin
 
 
 class auth:
@@ -41,10 +44,19 @@ class UserCreate(CreateView):
     model = User
     form_class = UserForm
     template_name = 'socialMediaApp/signUp.html'
+    errorMessage = None
 
     def get_success_url(self):
         instance.setState(True, self.object.id)
         return reverse_lazy('profile', args=(self.object.id,))
+
+    def form_valid(self, form):
+        try:
+            user = User.objects.get(email=form.cleaned_data['email'])
+            form.add_error('email', error="This username is taken.")
+            return super().form_invalid(form)
+        except User.DoesNotExist:
+            return super().form_valid(form)
 
 
 class UserDetail(DetailView, FormMixin):
@@ -63,6 +75,7 @@ class UserDetail(DetailView, FormMixin):
         context['user'] = User.objects.filter(pk=self.kwargs['pk']).first()
         context['post_list'] = User.objects.filter(pk=self.kwargs['pk']) \
             .first().post_set.all()
+        context['followedUsers'] = UserJoin.objects.filter(user_id=self.kwargs['pk'])
         return context
 
     def post(self, request, *args, **kwargs):
@@ -94,6 +107,14 @@ class ViewUserDetail(DetailView):
         context['post_list'] = User.objects.filter(pk=self.kwargs['pk']) \
             .first().post_set.all()
         context['foreignUser_pk'] = self.kwargs['foreignUser_pk']
+        context['followedUsers'] = UserJoin.objects.filter(user_id=self.kwargs['pk'])
+        try:
+            recordedJoin = UserJoin.objects.get(user_id=self.kwargs['foreignUser_pk'],
+                                                following_id=self.kwargs['pk'])
+            followText = 'Undo Follow'
+        except UserJoin.DoesNotExist:
+            followText = 'Follow'
+        context['followText'] = followText
         return context
 
 
@@ -188,4 +209,19 @@ class AutoCompleteView(View):
         return HttpResponse(data, mimetype)
 
 
+class UserFollow(RedirectView):
+
+    query_string = True
+    pattern_name = 'viewProfile'
+
+    def get_redirect_url(self, *args, **kwargs):
+        try:
+            recordedJoin = UserJoin.objects.get(user_id=self.kwargs['foreignUser_pk'],
+                                                following_id=self.kwargs['pk'])
+            recordedJoin.delete()
+        except UserJoin.DoesNotExist:
+            join = UserJoin(user_id=self.kwargs['foreignUser_pk'],
+                            following_id=self.kwargs['pk'])
+            join.save()
+        return super().get_redirect_url(*args, **kwargs)
 

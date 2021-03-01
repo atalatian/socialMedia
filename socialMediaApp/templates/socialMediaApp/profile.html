@@ -31,6 +31,7 @@
                             <a href="{% url 'postDetail' user.pk post.pk %}">
                                 {{ post.title }}
                             </a>
+                            {{ post.pk }}
                         {% endif %}
                         {% timeProcess post.date %}
                     </li>
@@ -44,11 +45,41 @@
         {% endif %}
     </div>
     <div>
+        {% if foreignUser_pk %}
+            {% if foreignUser_pk != user.pk %}
+                <a href="{% url 'userFollow' foreignUser_pk user.pk %}">{{ followText }}</a>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div>
         {% if not foreignUser_pk %}
             <form method="post">{% csrf_token %}
                 {{ form.as_p }}
                 <input type="submit" value="Search">
             </form>
+        {% endif %}
+    </div>
+    <div>
+        <h2>Following: </h2>
+        {% if followedUsers|length == 0 %}
+            <p>This user don't follow any user</p>
+        {% else %}
+            {% for followedUser in followedUsers %}
+                <h3>
+                    <a href="{% url 'viewProfile' user.pk followedUser.following.pk %}">
+                        {{ followedUser.following }}
+                    </a>
+                </h3>
+                <ul>
+                    {% for post in followedUser.following.post_set.all %}
+                        <li>
+                            <a href="{% url 'viewPostDetail' user.pk followedUser.following.pk post.pk %}">
+                                {{ post.title }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
         {% endif %}
     </div>
 {% endblock %}
