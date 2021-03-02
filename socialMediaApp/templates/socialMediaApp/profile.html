@@ -31,7 +31,6 @@
                             <a href="{% url 'postDetail' user.pk post.pk %}">
                                 {{ post.title }}
                             </a>
-                            {{ post.pk }}
                         {% endif %}
                         {% timeProcess post.date %}
                     </li>
@@ -66,16 +65,29 @@
         {% else %}
             {% for followedUser in followedUsers %}
                 <h3>
-                    <a href="{% url 'viewProfile' user.pk followedUser.following.pk %}">
-                        {{ followedUser.following }}
-                    </a>
+                    {% if  foreignUser_pk %}
+                        <a href="{% url 'viewProfile' foreignUser_pk followedUser.following.pk %}">
+                            {{ followedUser.following }}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'viewProfile' user.pk followedUser.following.pk %}">
+                            {{ followedUser.following }}
+                        </a>
+                    {% endif %}
                 </h3>
                 <ul>
                     {% for post in followedUser.following.post_set.all %}
                         <li>
-                            <a href="{% url 'viewPostDetail' user.pk followedUser.following.pk post.pk %}">
-                                {{ post.title }}
-                            </a>
+                            {% if foreignUser_pk %}
+                                <a href="{% url 'viewPostDetail' foreignUser_pk followedUser.following.pk post.pk %}">
+                                    {{ post.title }}
+                                </a>
+                            {% else %}
+                                <a href="{% url 'viewPostDetail' user.pk followedUser.following.pk post.pk %}">
+                                    {{ post.title }}
+                                </a>
+                            {% endif %}
+
                         </li>
                     {% endfor %}
                 </ul>

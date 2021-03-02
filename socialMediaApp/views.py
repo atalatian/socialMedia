@@ -44,7 +44,6 @@ class UserCreate(CreateView):
     model = User
     form_class = UserForm
     template_name = 'socialMediaApp/signUp.html'
-    errorMessage = None
 
     def get_success_url(self):
         instance.setState(True, self.object.id)
@@ -172,7 +171,7 @@ class PostDetail(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['object'] = Post.objects.get(user_id=self.kwargs['pk'], pk=self.kwargs['post_pk'])
-        context['user_pk'] = self.kwargs['pk']
+        context['user'] = User.objects.get(pk=self.kwargs['pk'])
         return context
 
 
@@ -190,7 +189,7 @@ class ViewPostDetail(DetailView):
         context = super().get_context_data(**kwargs)
         context['object'] = Post.objects.get(user_id=self.kwargs['pk'], pk=self.kwargs['post_pk'])
         context['foreignUser_pk'] = self.kwargs['foreignUser_pk']
-        context['user_pk'] = self.kwargs['pk']
+        context['user'] = User.objects.get(pk=self.kwargs['pk'])
         return context
 
 

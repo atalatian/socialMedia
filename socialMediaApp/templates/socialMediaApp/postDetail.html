@@ -8,15 +8,16 @@
     <ul>
         <li>
             {% if foreignUser_pk %}
-                <a href="{% url 'viewProfile' foreignUser_pk  user_pk %}">Back</a>
+                <a href="{% url 'viewProfile' foreignUser_pk  user.pk %}">Back</a>
             {% else %}
-                <a href="{% url 'profile' user_pk %}">Back</a>
+                <a href="{% url 'profile' user.pk %}">Back</a>
             {% endif %}
         </li>
     </ul>
 {% endblock %}
 
 {% block body %}
+    <h1>{{ user.email }} Post:</h1>
     <div>
         <h1>Title: </h1>
         <p>{{ object.title }}</p>
