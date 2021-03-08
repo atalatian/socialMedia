@@ -1,7 +1,7 @@
 from django.forms import ModelForm
 from django.utils.translation import gettext_lazy as _
 from django import forms
-from .models import User
+from .models import User,Comment
 from .models import Post
 
 
@@ -40,3 +40,8 @@ class PostForm(ModelForm):
 class SearchForm(forms.Form):
     search = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'id': 'txtSearch'}))
 
+
+class PostCmmentForm(ModelForm):
+    class Meta:
+        model = Comment
+        fields=['body']

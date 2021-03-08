@@ -1,19 +1,14 @@
 import json
-
-from django.shortcuts import HttpResponse, get_object_or_404, HttpResponseRedirect
+from django.contrib import messages
+from django.shortcuts import HttpResponse, get_object_or_404, HttpResponseRedirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
-from django.views.generic.edit import CreateView, FormView
-from django.views.generic.edit import FormMixin
+from django.views.generic.edit import CreateView, FormView, FormMixin
 
-from .forms import PostForm
-from .forms import SearchForm
-from .forms import UserForm
-from .models import Post
-from .models import User
-from .models import UserJoin
+from .forms import PostForm, SearchForm, UserForm, PostCmmentForm
+from .models import Post, User, UserJoin, Comment
 
 
 class auth:
@@ -31,6 +26,7 @@ class auth:
         state['loggedIn'] = loggedIn
         state['pk'] = pk
         self.state = state
+
 
 instance = auth()
 
@@ -209,7 +205,6 @@ class AutoCompleteView(View):
 
 
 class UserFollow(RedirectView):
-
     query_string = True
     pattern_name = 'viewProfile'
 
@@ -224,3 +219,27 @@ class UserFollow(RedirectView):
             join.save()
         return super().get_redirect_url(*args, **kwargs)
 
+
+# post_comment view
+class PostComment(View):
+    def get(self, request):
+        form = PostCmmentForm()
+        return render(request, 'socialMediaApp/post_Detail.html', {'form': form})
+
+    def post(self, request):
+        form = PostCmmentForm(request.POST)
+        if form.is_valid():
+            new_form = form.save()
+            new_form.post =request.post
+            new_form.user = request.user
+            form = new_form.save()
+        return render(request, 'socialMediaApp/post_Detail.html', {'form': form})
+
+
+# post_like view
+def PostLike(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    like = Vote(post=post, user=request.user)
+    like.save()
+    messages.success(request, 'you liked successfully', 'success')
+    return render(request,'socialMediaApp/post_Detail.html')
