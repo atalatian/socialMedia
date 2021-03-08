@@ -1,0 +1,15 @@
+{% extends 'socialMediaApp/base.html' %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block body %}
+    <div>
+        <form method="post">{% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Log In">
+        </form>
+        <a href="{% url 'signUp' %}">Sign Up</a>
+    </div>
+{% endblock %}

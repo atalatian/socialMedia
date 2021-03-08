@@ -1,0 +1,20 @@
+{% extends 'socialMediaApp/base.html' %}
+
+{% block nav %}
+    <ul>
+        <li><a href="{% url 'profile' user_pk %}">Back</a></li>
+    </ul>
+{% endblock %}
+
+{% block title %}
+    Create Post
+{% endblock %}
+
+{% block body %}
+    <div>
+        <form method="post">{% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Create Post">
+        </form>
+    </div>
+{% endblock %}

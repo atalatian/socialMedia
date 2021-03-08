@@ -1,0 +1,122 @@
+{% extends 'socialMediaApp/base.html' %}
+{% load timeProcess %}
+
+{% block title %}
+Profile
+{% endblock %}
+
+{% block nav %}
+<ul>
+    {% if foreignUser_pk %}
+    <li><a href="{% url 'profile' foreignUser_pk %}">Back</a></li>
+    {% endif %}
+    <li><a href="{% url 'signUp' %}">Sign Up</a></li>
+    <li><a href="{% url 'logIn' %}">Log In</a></li>
+</ul>
+{% endblock %}
+
+{% block body %}
+<div>
+    <h1>{{ user.email }} Profile</h1>
+    {% if post_list|length > 0 %}
+    <h2>Posts {{ post_list|length }} :</h2>
+    <ul>
+        {% for post in post_list %}
+        <li>
+            {% if foreignUser_pk %}
+            <a href="{% url 'viewPostDetail' foreignUser_pk user.pk post.pk %}">
+                {{ post.title }}
+            </a>
+            {% else %}
+            <a href="{% url 'postDetail' user.pk post.pk %}">
+                {{ post.title }}
+            </a>
+            {% endif %}
+            {% timeProcess post.date %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <h2>There is no post</h2>
+    {% endif %}
+    {% if not foreignUser_pk %}
+    <a href="{% url 'createPost' user.pk %}">Add a post</a>
+    {% endif %}
+</div>
+<div>
+    {% if foreignUser_pk %}
+    {% if foreignUser_pk != user.pk %}
+    <a href="{% url 'userFollow' foreignUser_pk user.pk %}">{{ followText }}</a>
+    {% endif %}
+    {% endif %}
+</div>
+<div>
+    {% if not foreignUser_pk %}
+    <form method="post">{% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Search">
+    </form>
+    {% endif %}
+</div>
+<div>
+    <h2>Following: </h2>
+    {% if followedUsers|length == 0 %}
+    <p>This user don't follow any user</p>
+    {% else %}
+    {% for followedUser in followedUsers %}
+    <h3>
+        {% if foreignUser_pk %}
+        <a href="{% url 'viewProfile' foreignUser_pk followedUser.following.pk %}">
+            {{ followedUser.following }}
+        </a>
+        {% else %}
+        <a href="{% url 'viewProfile' user.pk followedUser.following.pk %}">
+            {{ followedUser.following }}
+        </a>
+        {% endif %}
+    </h3>
+    <ul>
+        {% for post in followedUser.following.post_set.all %}
+        <li>
+            {% if foreignUser_pk %}
+            <a href="{% url 'viewPostDetail' foreignUser_pk followedUser.following.pk post.pk %}">
+                {{ post.title }}
+            </a><br>
+            <button><a href="{% url 'post_comment' %}">comment</a></button>
+            <button><a href="{% url 'post_like' post.pk %}">like</a></button>
+
+            {% else %}
+            <a href="{% url 'viewPostDetail' user.pk followedUser.following.pk post.pk %}">
+                {{ post.title }}
+            </a>
+            <button><a href="{% url 'post_comment' %}">comment</a></button>
+            <button><a href="{% url 'post_like' post.pk %}">like</a></button>
+
+
+            {% endif %}
+
+        </li>
+        {% endfor %}
+    </ul>
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+        $(document).ready(function(){
+            $("#txtSearch").autocomplete({
+                source: "/ajax_calls/search/",
+                minLength: 2,
+              });
+        });
+
+</script>
+{% endblock %}
+
+
+
+
+
+
