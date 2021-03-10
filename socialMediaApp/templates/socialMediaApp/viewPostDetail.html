@@ -1,0 +1,43 @@
+{% extends 'socialMediaApp/base.html' %}
+
+{% block title %}
+    Post Detail
+{% endblock %}
+
+{% block nav %}
+{% endblock %}
+
+{% block body %}
+    <div>
+        <h1>{{ user.email }} Post:</h1>
+        <div>
+            <h1>Title: </h1>
+            <p>{{ object.title }}</p>
+            <h1>Description: </h1>
+            <p>{{ object.description }}</p>
+        </div>
+        <div>
+            <h1>Post Comment</h1>
+            <div>
+                <form action="{% url 'postComment' foreignUser_pk user.pk object.pk %}" method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <input type="submit" value="Send">
+                </form>
+            </div>
+            <h1>Comments: </h1>
+            <div>
+                {% for comment in comments %}
+                    <h3>{{ comment.user.email }} Says: </h3>
+                    <p>{{ comment.body }}</p>
+                {% endfor %}
+            </div>
+            <h1>Post Like</h1>
+            <div>
+                <a href="{% url 'postLike' foreignUser_pk object.pk %}">
+                    <button>Like {{ object.likes_count }}</button>
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

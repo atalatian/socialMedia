@@ -1,49 +1,26 @@
 {% extends 'socialMediaApp/base.html' %}
 
 {% block title %}
-Post Detail
+    Post Detail
 {% endblock %}
 
 {% block nav %}
-<ul>
-    <li>
-        {% if foreignUser_pk %}
-        <a href="{% url 'viewProfile' foreignUser_pk  user.pk %}">Back</a>
-        {% else %}
-        <a href="{% url 'profile' user.pk %}">Back</a>
-        {% endif %}
-    </li>
-</ul>
 {% endblock %}
 
 {% block body %}
-<h1>{{ user.email }} Post:</h1>
-<div>
-    <h1>Title: </h1>
-    <p>{{ object.title }}</p>
-    <h1>Description: </h1>
-    <p>{{ object.description }}</p>
-
-</div>
-<div>
-    <h1>post_comment</h1>
+    <h1>{{ user.email }} Post:</h1>
     <div>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input type="submit" value="comment">
-        </form>
-        <a href="{% url 'post_comment' %}">send</a>
+        <h1>Title: </h1>
+        <p>{{ object.title }}</p>
+        <h1>Description: </h1>
+        <p>{{ object.description }}</p>
+        <h1>Comments: </h1>
+        <div>
+            {% for comment in comments %}
+                <h3>{{ comment.user.email }} Says: </h3>
+                <p>{{ comment.body }}</p>
+            {% endfor %}
+        </div>
+        <h1>Like: {{ object.likes_count }}</h1>
     </div>
-    <br/><br/><br/>
-
-    <h1>post_like</h1>
-    <div>
-        <a href="{% url 'post_like' object.id %}">Like {{ post.likes_count }}</a>
-        <br/><br/><br/>
-    </div>
-
-
-</div>
-
 {% endblock %}

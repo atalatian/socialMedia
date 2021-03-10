@@ -6,29 +6,10 @@ from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
 from django.views.generic.edit import CreateView, FormView, FormMixin
-
-from .forms import PostForm, SearchForm, UserForm, PostCmmentForm
-from .models import Post, User, UserJoin, Comment
-
-
-class auth:
-    def __init__(self):
-        self.state = {
-            'loggedIn': False,
-            'pk': None,
-        }
-
-    def getState(self):
-        return self.state
-
-    def setState(self, loggedIn, pk):
-        state = self.state.copy()
-        state['loggedIn'] = loggedIn
-        state['pk'] = pk
-        self.state = state
-
-
-instance = auth()
+from django.core.exceptions import PermissionDenied, NON_FIELD_ERRORS
+from .forms import PostForm, SearchForm, UserForm, PostCommentForm
+from .models import Post, User, UserJoin, Comment, Like
+from .helpers import authentication, followManager
 
 
 # Create your views here.
@@ -42,7 +23,7 @@ class UserCreate(CreateView):
     template_name = 'socialMediaApp/signUp.html'
 
     def get_success_url(self):
-        instance.setState(True, self.object.id)
+        authentication.setState(True, self.object.id)
         return reverse_lazy('profile', args=(self.object.id,))
 
     def form_valid(self, form):
@@ -57,19 +38,18 @@ class UserCreate(CreateView):
 class UserDetail(DetailView, FormMixin):
     model = User
     template_name = 'socialMediaApp/profile.html'
+    pk_url_kwarg = 'pk'
     form_class = SearchForm
 
     def get(self, request, *args, **kwargs):
-        if instance.getState()['loggedIn'] and instance.getState()['pk'] == self.kwargs['pk']:
+        if authentication.getState()['loggedIn'] and authentication.getState()['pk'] == self.kwargs['pk']:
             return super().get(request, *args, **kwargs)
         else:
             return HttpResponseRedirect(reverse_lazy("logIn"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user'] = User.objects.filter(pk=self.kwargs['pk']).first()
-        context['post_list'] = User.objects.filter(pk=self.kwargs['pk']) \
-            .first().post_set.all()
+        context['post_list'] = Post.myObjects.get_posts_by_user_pk(self.kwargs['pk'])
         context['followedUsers'] = UserJoin.objects.filter(user_id=self.kwargs['pk'])
         return context
 
@@ -88,28 +68,30 @@ class UserDetail(DetailView, FormMixin):
 
 class ViewUserDetail(DetailView):
     model = User
-    template_name = 'socialMediaApp/profile.html'
+    pk_url_kwarg = 'pk'
+    template_name = 'socialMediaApp/viewProfile.html'
+
+    def check_if_user_is_followed(self, context):
+        try:
+            recordedJoin = UserJoin.get_users_by_both(self.kwargs['foreignUser_pk'], self.kwargs['pk'])
+            followText = 'Undo Follow'
+        except UserJoin.DoesNotExist:
+            followText = 'Follow'
+        context['followText'] = followText
 
     def get(self, request, *args, **kwargs):
-        if instance.getState()['loggedIn'] and instance.getState()['pk'] == self.kwargs['foreignUser_pk']:
+        if authentication.getState()['loggedIn'] and authentication.getState()['pk'] == self.kwargs['foreignUser_pk']:
             return super().get(request, *args, **kwargs)
         else:
             return HttpResponseRedirect(reverse_lazy("logIn"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user'] = User.objects.filter(pk=self.kwargs['pk']).first()
-        context['post_list'] = User.objects.filter(pk=self.kwargs['pk']) \
-            .first().post_set.all()
+        context['post_list'] = Post.myObjects.get_posts_by_user_pk(self.kwargs['pk'])
         context['foreignUser_pk'] = self.kwargs['foreignUser_pk']
-        context['followedUsers'] = UserJoin.objects.filter(user_id=self.kwargs['pk'])
-        try:
-            recordedJoin = UserJoin.objects.get(user_id=self.kwargs['foreignUser_pk'],
-                                                following_id=self.kwargs['pk'])
-            followText = 'Undo Follow'
-        except UserJoin.DoesNotExist:
-            followText = 'Follow'
-        context['followText'] = followText
+        context['followedUsers'] = \
+            UserJoin.get_users_by_user_pk(self.kwargs['pk'])
+        self.check_if_user_is_followed(context)
         return context
 
 
@@ -121,7 +103,7 @@ class UserEnter(FormView):
     def form_valid(self, form):
         user = get_object_or_404(User, email=form.cleaned_data['email'], password=form.cleaned_data['password'])
         self.success_url = reverse_lazy('profile', args=(user.pk,))
-        instance.setState(True, user.pk)
+        authentication.setState(True, user.pk)
         return super().form_valid(form)
 
 
@@ -131,7 +113,7 @@ class PostCreate(FormView):
     template_name = 'socialMediaApp/createPost.html'
 
     def get(self, request, *args, **kwargs):
-        if instance.getState()['loggedIn'] and instance.getState()['pk'] == self.kwargs['pk']:
+        if authentication.getState()['loggedIn'] and authentication.getState()['pk'] == self.kwargs['pk']:
             return super().get(request, *args, **kwargs)
         else:
             return HttpResponseRedirect(reverse_lazy("logIn"))
@@ -157,35 +139,65 @@ class PostCreate(FormView):
 class PostDetail(DetailView):
     model = Post
     template_name = 'socialMediaApp/postDetail.html'
+    pk_url_kwarg = 'post_pk'
 
     def get(self, request, *args, **kwargs):
-        if instance.getState()['loggedIn'] and instance.getState()['pk'] == self.kwargs['pk']:
+        if authentication.getState()['loggedIn'] and authentication.getState()['pk'] == self.kwargs['pk']:
             return super().get(request, *args, **kwargs)
         else:
             return HttpResponseRedirect(reverse_lazy("logIn"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['object'] = Post.objects.get(user_id=self.kwargs['pk'], pk=self.kwargs['post_pk'])
         context['user'] = User.objects.get(pk=self.kwargs['pk'])
+        context['comments'] = Comment.objects.filter(post_id=self.kwargs['post_pk'])
         return context
 
 
-class ViewPostDetail(DetailView):
+class ViewPostDetail(DetailView, FormMixin):
     model = Post
-    template_name = 'socialMediaApp/postDetail.html'
+    template_name = 'socialMediaApp/viewPostDetail.html'
+    pk_url_kwarg = 'post_pk'
+    form_class = PostCommentForm
+
+    @staticmethod
+    def assert_user_follow(user_pk, following_pk):
+        join = UserJoin.objects.filter(user_id=user_pk, following_id=following_pk)
+        if join.exists():
+            return True
+        else:
+            return False
 
     def get(self, request, *args, **kwargs):
-        if instance.getState()['loggedIn'] and instance.getState()['pk'] == self.kwargs['foreignUser_pk']:
+        if authentication.getState()['loggedIn'] and \
+                authentication.getState()['pk'] == self.kwargs['foreignUser_pk']:
             return super().get(request, *args, **kwargs)
         else:
             return HttpResponseRedirect(reverse_lazy("logIn"))
 
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            if self.assert_user_follow(self.kwargs['foreignUser_pk'], self.kwargs['pk']):
+                comment = Comment(user_id=self.kwargs['foreignUser_pk'],
+                                  post_id=self.kwargs['post_pk'],
+                                  body=form.cleaned_data['body'])
+                comment.save()
+                return HttpResponseRedirect(reverse_lazy("viewPostDetail", kwargs={
+                    'foreignUser_pk': self.kwargs['foreignUser_pk'],
+                    'pk': self.kwargs['pk'],
+                    'post_pk': self.kwargs['post_pk'],
+                }))
+            else:
+                raise PermissionDenied
+        else:
+            return self.form_invalid(form)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['object'] = Post.objects.get(user_id=self.kwargs['pk'], pk=self.kwargs['post_pk'])
         context['foreignUser_pk'] = self.kwargs['foreignUser_pk']
         context['user'] = User.objects.get(pk=self.kwargs['pk'])
+        context['comments'] = Comment.objects.filter(post_id=self.kwargs['post_pk'])
         return context
 
 
@@ -209,37 +221,38 @@ class UserFollow(RedirectView):
     pattern_name = 'viewProfile'
 
     def get_redirect_url(self, *args, **kwargs):
-        try:
-            recordedJoin = UserJoin.objects.get(user_id=self.kwargs['foreignUser_pk'],
-                                                following_id=self.kwargs['pk'])
-            recordedJoin.delete()
-        except UserJoin.DoesNotExist:
-            join = UserJoin(user_id=self.kwargs['foreignUser_pk'],
-                            following_id=self.kwargs['pk'])
-            join.save()
-        return super().get_redirect_url(*args, **kwargs)
+        if self.kwargs['foreignUser_pk'] == self.kwargs['pk']:
+            raise PermissionDenied
+        else:
+            followManager.user_follow(self.kwargs['foreignUser_pk'], self.kwargs['pk'])
+            try:
+                recordedJoin = UserJoin.objects.get(user_id=self.kwargs['foreignUser_pk'],
+                                                    following_id=self.kwargs['pk'])
+                recordedJoin.delete()
+            except UserJoin.DoesNotExist:
+                join = UserJoin(user_id=self.kwargs['foreignUser_pk'],
+                                following_id=self.kwargs['pk'])
+                join.save()
+            return super().get_redirect_url(*args, **kwargs)
 
 
-# post_comment view
-class PostComment(View):
-    def get(self, request):
-        form = PostCmmentForm()
-        return render(request, 'socialMediaApp/post_Detail.html', {'form': form})
+class UserLike(RedirectView):
+    query_string = True
 
-    def post(self, request):
-        form = PostCmmentForm(request.POST)
-        if form.is_valid():
-            new_form = form.save()
-            new_form.post =request.post
-            new_form.user = request.user
-            form = new_form.save()
-        return render(request, 'socialMediaApp/post_Detail.html', {'form': form})
-
-
-# post_like view
-def PostLike(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    like = Vote(post=post, user=request.user)
-    like.save()
-    messages.success(request, 'you liked successfully', 'success')
-    return render(request,'socialMediaApp/post_Detail.html')
+    def get_redirect_url(self, *args, **kwargs):
+        post = Post.objects.get(pk=self.kwargs['post_pk'])
+        likingUser = User.objects.get(pk=self.kwargs['user_pk'])
+        likingUserFollowing = UserJoin.objects.filter(user=likingUser)
+        for user in likingUserFollowing:
+            if post.user.pk == user.following.pk:
+                self.url = self.request.META.get('HTTP_REFERER')
+                if not post.user_can_like(likingUser):
+                    like = Like(user_id=self.kwargs['user_pk'],
+                                post_id=self.kwargs['post_pk'])
+                    like.save()
+                else:
+                    like = Like.objects.get(user_id=self.kwargs['user_pk'],
+                                            post_id=self.kwargs['post_pk'])
+                    like.delete()
+                return super().get_redirect_url(*args, **kwargs)
+        raise PermissionDenied

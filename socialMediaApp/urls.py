@@ -17,8 +17,10 @@ urlpatterns = [
     path('ajax_calls/search/', views.AutoCompleteView.as_view(), name='autocomplete'),
     path('view/<int:foreignUser_pk>/profile/<int:pk>/follow',
          views.UserFollow.as_view(), name='userFollow'),
-    path('comment/', views.PostComment.as_view(), name='post_comment'),
-    path('like/<int:pk>', views.PostLike, name='post_like'),
+    path('comment/<int:foreignUser_pk>/<int:pk>/<int:post_pk>',
+         views.ViewPostDetail.as_view(), name='postComment'),
+    path('like/<int:user_pk>/<int:post_pk>',
+         views.UserLike.as_view(), name='postLike'),
 ]
 
 

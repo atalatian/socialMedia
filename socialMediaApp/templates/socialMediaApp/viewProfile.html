@@ -5,13 +5,6 @@
     Profile
 {% endblock %}
 
-{% block nav %}
-    <ul>
-        <li><a href="{% url 'signUp' %}">Sign Up</a></li>
-        <li><a href="{% url 'logIn' %}">Log In</a></li>
-    </ul>
-{% endblock %}
-
 {% block body %}
     <div>
         <h1>{{ object.email }} Profile</h1>
@@ -19,24 +12,20 @@
             <h2>Posts {{ post_list|length }} :</h2>
             <ul>
                 {% for post in post_list %}
-                <li>
-                    <a href="{% url 'postDetail' object.pk post.pk %}">
-                        {{ post.title }}
-                    </a>
-                    {% timeProcess post.date %}
-                </li>
+                    <li>
+                        <a href="{% url 'viewPostDetail' foreignUser_pk object.pk post.pk %}">
+                            {{ post.title }}
+                        </a>
+                        {% timeProcess post.date %}
+                    </li>
                 {% endfor %}
             </ul>
         {% else %}
             <h2>There is no post</h2>
         {% endif %}
-        <a href="{% url 'createPost' object.pk %}">Add a post</a>
     </div>
     <div>
-        <form method="post">{% csrf_token %}
-            {{ form.as_p }}
-            <input type="submit" value="Search">
-        </form>
+        <a href="{% url 'userFollow' foreignUser_pk object.pk %}">{{ followText }}</a>
     </div>
     <div>
         <h2>Following: </h2>
@@ -45,7 +34,7 @@
         {% else %}
         {% for followedUser in followedUsers %}
             <h3>
-                <a href="{% url 'viewProfile' object.pk followedUser.following.pk %}">
+                <a href="{% url 'viewProfile' foreignUser_pk followedUser.following.pk %}">
                     {{ followedUser.following }}
                 </a>
             </h3>
@@ -53,14 +42,14 @@
                 {% if followedUser.following.post_set.all|length > 0 %}
                     {% for post in followedUser.following.post_set.all %}
                         <li>
-                            <a href="{% url 'viewPostDetail' object.pk followedUser.following.pk post.pk %}">
+                            <a href="{% url 'viewPostDetail' foreignUser_pk followedUser.following.pk post.pk %}">
                                 {{ post.title }}
                             </a>
                             <br/>
-                            <a href="{% url 'viewPostDetail' object.pk followedUser.following.pk post.pk %}">
+                            <a href="{% url 'viewPostDetail' foreignUser_pk followedUser.following.pk post.pk %}">
                                 <button>Comment</button>
                             </a>
-                            <a href="{% url 'postLike' object.pk post.pk %}">
+                            <a href="{% url 'postLike' foreignUser_pk post.pk %}">
                                 <button>Like {{ post.likes_count }}</button>
                             </a>
                         </li>
@@ -73,20 +62,3 @@
         {% endif %}
     </div>
 {% endblock %}
-
-{% block script %}
-    <script>
-            $(document).ready(function(){
-                $("#txtSearch").autocomplete({
-                    source: "/ajax_calls/search/",
-                    minLength: 2,
-                  });
-            });
-    </script>
-{% endblock %}
-
-
-
-
-
-
