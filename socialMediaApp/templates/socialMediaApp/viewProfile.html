@@ -30,7 +30,7 @@
     <div>
         <h2>Following: </h2>
         {% if followedUsers|length == 0 %}
-            <p>This user don't follow any user</p>
+            <p>This user doesnt' follow any user</p>
         {% else %}
         {% for followedUser in followedUsers %}
             <h3>
@@ -59,6 +59,40 @@
                 {% endif %}
             </ul>
         {% endfor %}
+        {% endif %}
+    </div>
+    <div>
+        <h2>Followers: </h2>
+        {% if userFollowers|length == 0 %}
+            <p>This user doesn't have any followers</p>
+        {% else %}
+            {% for userFollower in userFollowers %}
+                <h3>
+                    <a href="{% url 'viewProfile' foreignUser_pk userFollower.user.pk %}">
+                        {{ userFollower.user }}
+                    </a>
+                </h3>
+                <ul>
+                    {% if userFollower.user.post_set.all|length > 0 %}
+                        {% for post in userFollower.user.post_set.all %}
+                            <li>
+                                <a href="{% url 'viewPostDetail' foreignUser_pk userFollower.user.pk post.pk %}">
+                                    {{ post.title }}
+                                </a>
+                                <br/>
+                                <a href="{% url 'viewPostDetail' foreignUser_pk userFollower.user.pk post.pk %}">
+                                    <button>Comment</button>
+                                </a>
+                                <a href="{% url 'postLike' foreignUser_pk post.pk %}">
+                                    <button>Like {{ post.likes_count }}</button>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li>This user have no post.</li>
+                    {% endif %}
+                </ul>
+            {% endfor %}
         {% endif %}
     </div>
 {% endblock %}
