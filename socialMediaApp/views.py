@@ -1,15 +1,16 @@
 import json
-from django.contrib import messages
-from django.shortcuts import HttpResponse, get_object_or_404, HttpResponseRedirect, render
+
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import HttpResponse, get_object_or_404, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
 from django.views.generic.edit import CreateView, FormView, FormMixin
-from django.core.exceptions import PermissionDenied, NON_FIELD_ERRORS
+
 from .forms import PostForm, SearchForm, UserForm, PostCommentForm
-from .models import Post, User, UserJoin, Comment, Like
 from .helpers import authentication, followManager
+from .models import Post, User, UserJoin, Comment, Like
 
 
 # Create your views here.
@@ -49,7 +50,7 @@ class UserDetail(DetailView, FormMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['post_list'] = Post.myObjects.get_posts_by_user_pk(self.kwargs['pk'])
+        context['post_list'] = Post.objects.filter(user_id=self.kwargs['pk'])
         context['followedUsers'] = UserJoin.objects.filter(user_id=self.kwargs['pk'])
         return context
 
@@ -71,14 +72,6 @@ class ViewUserDetail(DetailView):
     pk_url_kwarg = 'pk'
     template_name = 'socialMediaApp/viewProfile.html'
 
-    def check_if_user_is_followed(self, context):
-        try:
-            recordedJoin = UserJoin.get_users_by_both(self.kwargs['foreignUser_pk'], self.kwargs['pk'])
-            followText = 'Undo Follow'
-        except UserJoin.DoesNotExist:
-            followText = 'Follow'
-        context['followText'] = followText
-
     def get(self, request, *args, **kwargs):
         if authentication.getState()['loggedIn'] and authentication.getState()['pk'] == self.kwargs['foreignUser_pk']:
             return super().get(request, *args, **kwargs)
@@ -87,11 +80,11 @@ class ViewUserDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['post_list'] = Post.myObjects.get_posts_by_user_pk(self.kwargs['pk'])
+        context['post_list'] = Post.objects.filter(user_id=self.kwargs['pk'])
         context['foreignUser_pk'] = self.kwargs['foreignUser_pk']
-        context['followedUsers'] = \
-            UserJoin.get_users_by_user_pk(self.kwargs['pk'])
-        self.check_if_user_is_followed(context)
+        context['followedUsers'] = UserJoin.objects.filter(user_id=self.kwargs['pk'])
+        context['followText'] = followManager.followText(self.kwargs['foreignUser_pk'],
+                                                         self.kwargs['pk'])
         return context
 
 
@@ -220,21 +213,17 @@ class UserFollow(RedirectView):
     query_string = True
     pattern_name = 'viewProfile'
 
+    def get(self, request, *args, **kwargs):
+        UserJoin.objects.create(user_id=self.kwargs['foreignUser_pk'],
+                                following_id=self.kwargs['pk'])
+        return super(UserFollow, self).get(*args, **kwargs)
+
     def get_redirect_url(self, *args, **kwargs):
         if self.kwargs['foreignUser_pk'] == self.kwargs['pk']:
             raise PermissionDenied
         else:
-            followManager.user_follow(self.kwargs['foreignUser_pk'], self.kwargs['pk'])
-            try:
-                recordedJoin = UserJoin.objects.get(user_id=self.kwargs['foreignUser_pk'],
-                                                    following_id=self.kwargs['pk'])
-                recordedJoin.delete()
-            except UserJoin.DoesNotExist:
-                join = UserJoin(user_id=self.kwargs['foreignUser_pk'],
-                                following_id=self.kwargs['pk'])
-                join.save()
-            return super().get_redirect_url(*args, **kwargs)
-
+            pass
+        return super().get_redirect_url(*args, **kwargs)
 
 class UserLike(RedirectView):
     query_string = True

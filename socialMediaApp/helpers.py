@@ -1,5 +1,6 @@
 from .models import UserJoin
 
+
 class auth:
     def __init__(self):
         self.state = {
@@ -16,22 +17,27 @@ class auth:
         state['pk'] = pk
         self.state = state
 
+    def is_user_authenticated(self, loggedIn, pk):
+        pass
+
+
 class follow:
     def __init__(self):
-        self.state = {
-            'followText': None,
-        }
+        self.followTextText = None
 
     def user_follow(self, user_pk, following_pk):
-        state = self.state.copy()
         try:
-            UserJoin.delete_join(user_pk, following_pk)
-            state['followText'] = "Follow"
+            UserJoin.objects.get(user_id=user_pk, following_id=following_pk).delete()
         except UserJoin.DoesNotExist:
-            UserJoin.create_join(user_pk, following_pk)
-            state['followText'] = "Undo Follow"
+            UserJoin.objects.create(user_id=user_pk, following_id=following_pk)
 
-
+    def followText(self, user_pk, following_pk):
+        try:
+            UserJoin.objects.get(user_id=user_pk, following_id=following_pk)
+            self.followTextText = "Undo Follow"
+        except UserJoin.DoesNotExist:
+            self.followTextText = "Follow"
+        return self.followTextText
 
 
 if __name__ == '__main__':

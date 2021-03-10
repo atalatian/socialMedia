@@ -11,6 +11,7 @@ class User(models.Model):
     def __str__(self):
         return self.email
 
+
 class UserJoin(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name="user")
@@ -19,26 +20,6 @@ class UserJoin(models.Model):
 
     def __str__(self):
         return str(self.user) + " follows " + str(self.following)
-
-    def get_users_by_user_pk(self, user_pk):
-        return UserJoin.objects.filter(user_id=user_pk)
-
-    def get_users_by_following_pk(self, following_pk):
-        return UserJoin.objects.filter(following_id=following_pk)
-
-    def get_users_by_both(self, user_pk, following_pk):
-        return UserJoin.objects.get(user_id=user_pk, following_id=following_pk)
-
-    def create_join(self, user_pk, following_pk):
-        UserJoin(user_id=user_pk, following_id=following_pk).save()
-
-    def delete_join(self, user_pk, following_pk):
-        self.get_users_by_both(user_pk, following_pk).delete()
-
-
-class PostManager(models.Manager):
-    def get_posts_by_user_pk(self, user_pk):
-        return Post.objects.filter(user_id=user_pk)
 
 
 class Post(models.Model):
@@ -59,9 +40,6 @@ class Post(models.Model):
         if qs.exists():
             return True
         return False
-
-    objects = models.Manager()
-    myObjects = PostManager()
 
 
 class Comment(models.Model):
