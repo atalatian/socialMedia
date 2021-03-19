@@ -8,32 +8,68 @@ from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
 from django.views.generic.edit import CreateView, FormView, FormMixin
 
-from .forms import PostForm, SearchForm, UserForm, PostCommentForm
+from .forms import PostForm, SearchForm, UserSignUpForm, PostCommentForm, UserUpdateForm, UserEnterForm
 from .helpers import authentication
 from .models import Post, User, UserJoin, Comment, Like
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User as DjangoUser
+from django.contrib import messages
 
 
 # Create your views here.
 def index(request):
-    return HttpResponseRedirect(reverse_lazy('logIn'))
+    return HttpResponse("Successful")
 
 
-class UserCreate(CreateView):
+class UserSignUp(FormView):
     model = User
-    form_class = UserForm
+    form_class = UserSignUpForm
     template_name = 'socialMediaApp/signUp.html'
 
-    def get_success_url(self):
-        authentication.setState(True, self.object.id)
-        return reverse_lazy('profile', args=(self.object.id,))
+    def form_valid(self, form):
+        user = DjangoUser.objects.create_user(username=form.cleaned_data['email'],
+                                              email=form.cleaned_data['email'],
+                                              password=form.cleaned_data['password'])
+        user.save()
+        form.save()
+        user_pk = User.objects.get(email=form.cleaned_data['email']).pk
+        user = authenticate(username=form.cleaned_data['email'], password=form.cleaned_data['password'])
+        login(self.request, user)
+        self.success_url = reverse_lazy('profile', kwargs={"pk": user_pk})
+        return super().form_valid(form)
+
+
+class UserUpdate(FormView):
+    model = User
+    form_class = UserUpdateForm
+    template_name = 'socialMediaApp/updateProfile.html'
+
+    def get_initial(self):
+        user = User.objects.get(pk=self.kwargs['pk'])
+        initial_dict = {
+            'password': user.password,
+            'firstName': user.firstName,
+            'lastName': user.lastName,
+            'gender': user.gender,
+            'bio': user.bio,
+            'website': user.website,
+        }
+        return initial_dict
 
     def form_valid(self, form):
-        try:
-            user = User.objects.get(email=form.cleaned_data['email'])
-            form.add_error('email', error="This username is taken.")
-            return super().form_invalid(form)
-        except User.DoesNotExist:
-            return super().form_valid(form)
+        user = User.objects.get(pk=self.kwargs['pk'])
+        djangoUser = DjangoUser.objects.get(username=user.email)
+        djangoUser.set_password(form.cleaned_data['password'])
+        djangoUser.save()
+        user.password = form.cleaned_data['password'] or user.password
+        user.firstName = form.cleaned_data['firstName']
+        user.lastName = form.cleaned_data['lastName']
+        user.gender = form.cleaned_data['gender']
+        user.bio = form.cleaned_data['bio']
+        user.website = form.cleaned_data['website']
+        user.save()
+        self.success_url = reverse_lazy('profile', kwargs={"pk": self.kwargs['pk']})
+        return super(UserUpdate, self).form_valid(form)
 
 
 class UserDetail(DetailView, FormMixin):
@@ -41,12 +77,6 @@ class UserDetail(DetailView, FormMixin):
     template_name = 'socialMediaApp/profile.html'
     pk_url_kwarg = 'pk'
     form_class = SearchForm
-
-    def get(self, request, *args, **kwargs):
-        if authentication.getState()['loggedIn'] and authentication.getState()['pk'] == self.kwargs['pk']:
-            return super().get(request, *args, **kwargs)
-        else:
-            return HttpResponseRedirect(reverse_lazy("logIn"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -100,14 +130,18 @@ class ViewUserDetail(DetailView):
 
 class UserEnter(FormView):
     model = User
-    form_class = UserForm
+    form_class = UserEnterForm
     template_name = 'socialMediaApp/LogIn.html'
 
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
     def form_valid(self, form):
-        user = get_object_or_404(User, email=form.cleaned_data['email'], password=form.cleaned_data['password'])
-        self.success_url = reverse_lazy('profile', args=(user.pk,))
-        authentication.setState(True, user.pk)
-        return super().form_valid(form)
+        user_pk = get_object_or_404(User, email=form.cleaned_data['email'], password=form.cleaned_data['password']).pk
+        user = authenticate(username=form.cleaned_data['email'], password=form.cleaned_data['password'])
+        login(self.request, user)
+        self.success_url = reverse_lazy('profile', kwargs={'pk': user_pk})
+        return super(UserEnter, self).form_valid(form)
 
 
 class PostCreate(FormView):
