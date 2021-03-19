@@ -22,6 +22,7 @@ class UserJoin(models.Model):
                              related_name="user")
     following = models.ForeignKey(User, on_delete=models.CASCADE,
                                   related_name="following")
+    accept = models.BooleanField()
 
     def __str__(self):
         return str(self.user) + " follows " + str(self.following)

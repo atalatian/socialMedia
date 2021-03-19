@@ -117,6 +117,12 @@
             {% endfor %}
         {% endif %}
     </div>
+    <div>
+        <h1>Requested: </h1>
+        {% for request in requested %}
+            {{ request.user }}
+        {% endfor %}
+    </div>
 {% endblock %}
 
 {% block script %}

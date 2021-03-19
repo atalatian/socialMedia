@@ -23,6 +23,8 @@ urlpatterns = [
          views.UserLike.as_view(), name='postLike'),
     path('profile/<int:pk>/edit',
          views.UserUpdate.as_view(), name='userUpdate'),
+    path('profile/<int:pk>/<int:foreignUser_pk>/accept',
+         views.UserUpdate.as_view(), name='userUpdate'),
 ]
 
 
