@@ -118,10 +118,15 @@
         {% endif %}
     </div>
     <div>
-        <h1>Requested: </h1>
-        {% for request in requested %}
-            {{ request.user }}
-        {% endfor %}
+        <h2>Requested: </h2>
+        <ul>
+            {% for request in requested %}
+                <li>
+                    {{ request.user }}
+                    <a href="{% url 'userRequest' object.pk request.user.pk %}">Accept Request</a>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
 {% endblock %}
 

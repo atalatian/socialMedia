@@ -250,9 +250,13 @@ class UserFollow(RedirectView):
             return super().get_redirect_url(*args, **kwargs)
 
 
-class UserRequest(RedirectView):
-    query_string = True
-    pattern_name = 'profile'
+class UserRequest(View):
+    def get(self, request, *args, **kwargs):
+        join = UserJoin.objects.get(user_id=self.kwargs['foreignUser_pk'],
+                                    following_id=self.kwargs['pk'])
+        join.accept = True
+        join.save()
+        return HttpResponseRedirect(reverse_lazy('profile', kwargs={'pk': self.kwargs['pk']}))
 
 
 class UserLike(RedirectView):
