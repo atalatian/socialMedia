@@ -25,6 +25,10 @@ urlpatterns = [
          views.UserUpdate.as_view(), name='userUpdate'),
     path('profile/<int:pk>/<int:foreignUser_pk>/accept',
          views.UserRequest.as_view(), name='userRequest'),
+    path('comment/<int:pk>/<int:post_pk>/delete',
+         views.CommentDelete.as_view(), name='commentDelete'),
+    path('profile/<int:pk>/postDetail/<int:post_pk>/edit',
+         views.PostUpdate.as_view(), name='postUpdate'),
 ]
 
 

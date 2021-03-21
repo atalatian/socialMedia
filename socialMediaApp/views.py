@@ -6,11 +6,11 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
-from django.views.generic.edit import CreateView, FormView, FormMixin
+from django.views.generic.edit import CreateView, FormView, FormMixin, DeleteView
 
 from .forms import PostForm, SearchForm, UserSignUpForm, PostCommentForm, UserUpdateForm, UserEnterForm
 from .models import Post, User, UserJoin, Comment, Like
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User as DjangoUser
 
 
@@ -76,6 +76,16 @@ class UserDetail(DetailView, FormMixin):
     pk_url_kwarg = 'pk'
     form_class = SearchForm
 
+    def get(self, request, *args, **kwargs):
+        user = User.objects.get(pk=self.kwargs['pk'])
+        if request.user.is_authenticated:
+            if request.user.email == user.email:
+                return super(UserDetail, self).get(request, *args, **kwargs)
+            else:
+                return HttpResponseRedirect(reverse_lazy('logIn'))
+        else:
+            return HttpResponseRedirect(reverse_lazy('logIn'))
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['post_list'] = Post.objects.filter(user_id=self.kwargs['pk'])
@@ -130,6 +140,7 @@ class UserEnter(FormView):
     template_name = 'socialMediaApp/LogIn.html'
 
     def get(self, request, *args, **kwargs):
+        logout(self.request)
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -183,7 +194,7 @@ class ViewPostDetail(DetailView, FormMixin):
 
     @staticmethod
     def assert_user_follow(user_pk, following_pk):
-        join = UserJoin.objects.filter(user_id=user_pk, following_id=following_pk)
+        join = UserJoin.objects.filter(user_id=user_pk, following_id=following_pk, accept=True)
         if join.exists():
             return True
         else:
@@ -265,7 +276,7 @@ class UserLike(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         post = Post.objects.get(pk=self.kwargs['post_pk'])
         likingUser = User.objects.get(pk=self.kwargs['user_pk'])
-        likingUserFollowing = UserJoin.objects.filter(user=likingUser)
+        likingUserFollowing = UserJoin.objects.filter(user=likingUser, accept=True)
         for user in likingUserFollowing:
             if post.user.pk == user.following.pk:
                 self.url = self.request.META.get('HTTP_REFERER')
@@ -279,3 +290,31 @@ class UserLike(RedirectView):
                     like.delete()
                 return super().get_redirect_url(*args, **kwargs)
         raise PermissionDenied
+
+
+class CommentDelete(View):
+    def get(self, request, *args, **kwargs):
+        comment = Comment.objects.get(post_id=self.kwargs['post_pk'])
+        comment.delete()
+        return HttpResponseRedirect(reverse_lazy('postDetail', kwargs=self.kwargs))
+
+
+class PostUpdate(FormView):
+    form_class = PostForm
+    template_name = "socialMediaApp/updatePost.html"
+
+    def get_initial(self):
+        post = Post.objects.get(pk=self.kwargs['post_pk'])
+        initial = {
+            'title': post.title,
+            'description': post.description,
+        }
+        return initial
+
+    def form_valid(self, form):
+        post = Post.objects.get(pk=self.kwargs['post_pk'])
+        post.title = form.cleaned_data['title']
+        post.description = form.cleaned_data['description']
+        post.save()
+        self.success_url = reverse_lazy('postDetail', kwargs=self.kwargs)
+        return super(PostUpdate, self).form_valid(form)

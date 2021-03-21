@@ -19,8 +19,12 @@
             {% for comment in comments %}
                 <h3>{{ comment.user.email }} Says: </h3>
                 <p>{{ comment.body }}</p>
+                <a href="{% url 'commentDelete' object.pk post.pk %}">
+                        Delete Comment
+                </a>
             {% endfor %}
         </div>
         <h1>Like: {{ object.likes_count }}</h1>
+        <a href="{% url 'postUpdate' object.user.pk object.pk %}">Edit Post</a>
     </div>
 {% endblock %}

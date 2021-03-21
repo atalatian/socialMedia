@@ -29,7 +29,10 @@
             <div>
                 {% for comment in comments %}
                     <h3>{{ comment.user.email }} Says: </h3>
-                    <p>{{ comment.body }}</p>
+
+                    <ul>
+                        <li>{{ comment.body }}</li>
+                    </ul>
                 {% endfor %}
             </div>
             <h1>Post Like</h1>
