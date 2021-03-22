@@ -7,7 +7,7 @@
 
 {% block body %}
     <div>
-        <h1>{{ object.email }} Profile</h1>
+        <h1>{{ object.djangoUser.username }} Profile</h1>
         {% if post_list|length > 0 %}
             <h2>Posts {{ post_list|length }} :</h2>
             <ul>

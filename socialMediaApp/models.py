@@ -1,12 +1,13 @@
 from django.db import models
+from django.contrib.auth.models import User as DjangoUser
 
 
 # Create your models here.
 
 
 class User(models.Model):
-    email = models.EmailField(max_length=254, unique=True)
-    password = models.CharField(max_length=255)
+    djangoUser = models.OneToOneField(DjangoUser, on_delete=models.CASCADE,
+                                      related_name='djangoUserModel')
     firstName = models.CharField(max_length=255, blank=True, null=True)
     lastName = models.CharField(max_length=255, blank=True, null=True)
     gender = models.CharField(max_length=255, blank=True, null=True)
@@ -14,12 +15,12 @@ class User(models.Model):
     website = models.URLField(blank=True, null=True)
 
     def __str__(self):
-        return self.email
+        return self.djangoUser.username
 
 
 class UserJoin(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,
-                             related_name="user")
+                             related_name="follower")
     following = models.ForeignKey(User, on_delete=models.CASCADE,
                                   related_name="following")
     accept = models.BooleanField()

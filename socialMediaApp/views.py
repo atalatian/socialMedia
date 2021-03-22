@@ -1,22 +1,22 @@
 import json
 
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User as DjangoUser
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import HttpResponse, get_object_or_404, HttpResponseRedirect
+from django.shortcuts import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
-from django.views.generic.edit import CreateView, FormView, FormMixin, DeleteView
+from django.views.generic.edit import FormView, FormMixin, DeleteView
 
 from .forms import PostForm, SearchForm, UserSignUpForm, PostCommentForm, UserUpdateForm, UserEnterForm
 from .models import Post, User, UserJoin, Comment, Like
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User as DjangoUser
 
 
 # Create your views here.
 def index(request):
-    return HttpResponse("Successful")
+    return HttpResponseRedirect(reverse_lazy('logIn'))
 
 
 class UserSignUp(FormView):
@@ -25,15 +25,21 @@ class UserSignUp(FormView):
     template_name = 'socialMediaApp/signUp.html'
 
     def form_valid(self, form):
-        user = DjangoUser.objects.create_user(username=form.cleaned_data['email'],
-                                              email=form.cleaned_data['email'],
-                                              password=form.cleaned_data['password'])
+        djangoUser = DjangoUser.objects.create_user(username=form.cleaned_data['email'],
+                                                    email=form.cleaned_data['email'],
+                                                    password=form.cleaned_data['password'])
+
+        user = User(djangoUser=djangoUser,
+                    firstName=form.cleaned_data['firstName'],
+                    lastName=form.cleaned_data['lastName'],
+                    gender=form.cleaned_data['gender'],
+                    bio=form.cleaned_data['bio'],
+                    website=form.cleaned_data['website'])
+
+        djangoUser.save()
         user.save()
-        form.save()
-        user_pk = User.objects.get(email=form.cleaned_data['email']).pk
-        user = authenticate(username=form.cleaned_data['email'], password=form.cleaned_data['password'])
-        login(self.request, user)
-        self.success_url = reverse_lazy('profile', kwargs={"pk": user_pk})
+        login(self.request, djangoUser)
+        self.success_url = reverse_lazy('profile', kwargs={'pk': user.pk})
         return super().form_valid(form)
 
 
@@ -45,7 +51,7 @@ class UserUpdate(FormView):
     def get_initial(self):
         user = User.objects.get(pk=self.kwargs['pk'])
         initial_dict = {
-            'password': user.password,
+            'password': user.djangoUser.password,
             'firstName': user.firstName,
             'lastName': user.lastName,
             'gender': user.gender,
@@ -56,10 +62,9 @@ class UserUpdate(FormView):
 
     def form_valid(self, form):
         user = User.objects.get(pk=self.kwargs['pk'])
-        djangoUser = DjangoUser.objects.get(username=user.email)
-        djangoUser.set_password(form.cleaned_data['password'])
-        djangoUser.save()
-        user.password = form.cleaned_data['password'] or user.password
+        if form.cleaned_data['password']:
+            user.djangoUser.set_password(form.cleaned_data['password'])
+            user.djangoUser.save()
         user.firstName = form.cleaned_data['firstName']
         user.lastName = form.cleaned_data['lastName']
         user.gender = form.cleaned_data['gender']
@@ -77,21 +82,25 @@ class UserDetail(DetailView, FormMixin):
     form_class = SearchForm
 
     def get(self, request, *args, **kwargs):
-        user = User.objects.get(pk=self.kwargs['pk'])
         if request.user.is_authenticated:
-            if request.user.email == user.email:
-                return super(UserDetail, self).get(request, *args, **kwargs)
-            else:
-                return HttpResponseRedirect(reverse_lazy('logIn'))
+            user = User.objects.get(pk=self.kwargs['pk'])
+            foreign = User.objects.get(djangoUser=request.user)
+            if request.user != user.djangoUser:
+                return HttpResponseRedirect(reverse_lazy('viewProfile', kwargs={
+                    "foreignUser_pk": foreign.pk,
+                    "pk": user.pk,
+                }))
+            return super(UserDetail, self).get(request, *args, **kwargs)
         else:
             return HttpResponseRedirect(reverse_lazy('logIn'))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['post_list'] = Post.objects.filter(user_id=self.kwargs['pk'])
-        context['followedUsers'] = UserJoin.objects.filter(user_id=self.kwargs['pk'], accept=True)
-        context['userFollowers'] = UserJoin.objects.filter(following_id=self.kwargs['pk'], accept=True)
-        context['requested'] = UserJoin.objects.filter(following_id=self.kwargs['pk'], accept=False)
+        user = User.objects.get(pk=self.kwargs['pk'])
+        context['post_list'] = user.post_set.all()
+        context['followedUsers'] = user.follower.all().filter(accept=True)
+        context['userFollowers'] = user.following.all().filter(accept=True)
+        context['requested'] = user.following.all().filter(accept=False)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -102,7 +111,7 @@ class UserDetail(DetailView, FormMixin):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        user = get_object_or_404(User, email=form.cleaned_data['search'])
+        user = User.objects.get(djangoUser__username=form.cleaned_data['search'])
         self.success_url = reverse_lazy('viewProfile', args=(self.kwargs['pk'], user.pk))
         return super(UserDetail, self).form_valid(form)
 
@@ -144,10 +153,10 @@ class UserEnter(FormView):
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
-        user_pk = get_object_or_404(User, email=form.cleaned_data['email'], password=form.cleaned_data['password']).pk
-        user = authenticate(username=form.cleaned_data['email'], password=form.cleaned_data['password'])
-        login(self.request, user)
-        self.success_url = reverse_lazy('profile', kwargs={'pk': user_pk})
+        djangoUser = authenticate(username=form.cleaned_data['email'], password=form.cleaned_data['password'])
+        user = User.objects.get(djangoUser=djangoUser)
+        login(self.request, djangoUser)
+        self.success_url = reverse_lazy('profile', kwargs={'pk': user.pk})
         return super(UserEnter, self).form_valid(form)
 
 
@@ -230,10 +239,11 @@ class AutoCompleteView(View):
     def get(self, request):
         if request.is_ajax():
             q = request.GET.get('term', '').capitalize()
-            search_qs = User.objects.filter(email__startswith=q)
+            search_qs = User.objects.filter(djangoUser__username__startswith=q)
+            print(search_qs)
             results = []
             for r in search_qs:
-                results.append(r.email)
+                results.append(r.djangoUser.username)
             data = json.dumps(results)
         else:
             data = 'fail'
@@ -318,3 +328,10 @@ class PostUpdate(FormView):
         post.save()
         self.success_url = reverse_lazy('postDetail', kwargs=self.kwargs)
         return super(PostUpdate, self).form_valid(form)
+
+
+class PostDelete(View):
+    def get(self, request, *args, **kwargs):
+        Post.objects.get(pk=self.kwargs['post_pk']).delete()
+        return HttpResponseRedirect(reverse_lazy('profile',
+                                                 kwargs={'pk': self.kwargs['pk']}))

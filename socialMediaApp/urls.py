@@ -29,6 +29,8 @@ urlpatterns = [
          views.CommentDelete.as_view(), name='commentDelete'),
     path('profile/<int:pk>/postDetail/<int:post_pk>/edit',
          views.PostUpdate.as_view(), name='postUpdate'),
+    path('profile/<int:pk>/postDetail/<int:post_pk>/delete',
+         views.PostDelete.as_view(), name='postDelete'),
 ]
 
 

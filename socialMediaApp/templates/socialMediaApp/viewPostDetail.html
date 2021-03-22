@@ -9,7 +9,7 @@
 
 {% block body %}
     <div>
-        <h1>{{ user.email }} Post:</h1>
+        <h1>{{ user.djangoUser.username }} Post:</h1>
         <div>
             <h1>Title: </h1>
             <p>{{ object.title }}</p>
@@ -28,8 +28,7 @@
             <h1>Comments: </h1>
             <div>
                 {% for comment in comments %}
-                    <h3>{{ comment.user.email }} Says: </h3>
-
+                    <h3>{{ comment.user.djangoUser.username }} Says: </h3>
                     <ul>
                         <li>{{ comment.body }}</li>
                     </ul>
