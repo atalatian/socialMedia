@@ -19,7 +19,7 @@
             {% for comment in comments %}
                 <h3>{{ comment.user.djangoUser.username }} Says: </h3>
                 <p>{{ comment.body }}</p>
-                <a href="{% url 'commentDelete' object.pk post.pk %}">
+                <a href="{% url 'commentDelete' object.user.pk object.pk %}">
                         Delete Comment
                 </a>
             {% endfor %}

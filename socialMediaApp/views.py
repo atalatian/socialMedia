@@ -306,7 +306,8 @@ class CommentDelete(View):
     def get(self, request, *args, **kwargs):
         comment = Comment.objects.get(post_id=self.kwargs['post_pk'])
         comment.delete()
-        return HttpResponseRedirect(reverse_lazy('postDetail', kwargs=self.kwargs))
+        return HttpResponseRedirect(reverse_lazy('postDetail', kwargs={'pk': self.kwargs['pk'],
+                                                                       'post_pk': self.kwargs['post_pk']}))
 
 
 class PostUpdate(FormView):
