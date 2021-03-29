@@ -5,10 +5,33 @@
 {% endblock %}
 
 {% block nav %}
+    <ul>
+        <li><a href="{% url 'signUp' %}">Sign Up</a></li>
+        <li><a href="{% url 'logIn' %}">Log In</a></li>
+    </ul>
 {% endblock %}
 
+{% block sidebar %}
+    <ul>
+        <li>
+            <a href="{% url 'profile' foreignUser_pk %}">
+                To Your Profile</a>
+        </li>
+        <li>
+            <a href="{% url 'viewProfile' foreignUser_pk object.user.pk %}">
+                To this user's profile</a>
+        </li>
+        <li>
+           <a href="{% url 'postLike' foreignUser_pk object.pk %}">
+                Like
+           </a>
+        </li>
+    </ul>
+{% endblock %}
+
+
 {% block body %}
-    <div>
+    <div class="postDetail">
         <h1>{{ user.djangoUser.username }} Post:</h1>
         <div>
             <h1>Title: </h1>
@@ -34,12 +57,7 @@
                     </ul>
                 {% endfor %}
             </div>
-            <h1>Post Like</h1>
-            <div>
-                <a href="{% url 'postLike' foreignUser_pk object.pk %}">
-                    <button>Like {{ object.likes_count }}</button>
-                </a>
-            </div>
+            <h1>Like Count: {{ object.likes_count }}</h1>
         </div>
     </div>
 {% endblock %}

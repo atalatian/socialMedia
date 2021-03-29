@@ -4,8 +4,22 @@
     Edit Profile
 {% endblock %}
 
+{% block nav %}
+    <ul>
+        <li><a href="{% url 'signUp' %}">Sign Up</a></li>
+        <li><a href="{% url 'logIn' %}">Log In</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block sidebar %}
+    <ul>
+        <li><a href="{% url 'profile' user_pk %}">Back to profile</a></li>
+    </ul>
+{% endblock %}
+
 {% block body %}
-    <div>
+    <div class="updateProfile">
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}

@@ -1,0 +1,188 @@
+body{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+
+
+.wrapper{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+
+.navBar{
+    width: calc(100% - 10px);
+    height: 60px;
+    background: #0F4C81;
+    border-radius: 30px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.navBar ul{
+    list-style: none;
+    display: inline-flex;
+}
+
+.navBar li{
+    margin-left: 10px;
+}
+
+.navBar a{
+    color: white;
+}
+
+.main_wrap{
+    width: 100%;
+    min-height: calc(100vh - 70px);
+    display: flex;
+    justify-content: space-between;
+}
+
+.sideBar{
+    width: 20%;
+    min-height: 100%;
+    background: #0F4C81;
+    border-radius: 30px;
+    margin: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.sideBar li{
+    list-style: none;
+}
+
+.sideBar a{
+    color: white;
+}
+
+
+.body {
+    width: 80%;
+    min-height: 100%;
+    display: flex;
+}
+
+.body > div{
+    margin: 10px;
+}
+
+.profile{
+    background: #852BA3;
+    color: white;
+    width: 40%;
+    border-radius: 30px;
+    padding: 25px;
+    overflow-x: auto;
+    height: fit-content;
+    height: -moz-fit-content;
+}
+
+.profile p{
+    word-break: break-word;
+}
+
+.profile a {
+    color: white;
+}
+
+.search{
+    background: #852BA3;
+    width: 40%;
+    border-radius: 30px;
+    padding: 25px;
+    color: white;
+    height: fit-content;
+    height: -moz-fit-content;
+}
+
+.follow{
+    background: #852BA3;
+    width: 40%;
+    border-radius: 30px;
+    padding: 25px;
+    color: white;
+    overflow-x: auto;
+    height: fit-content;
+    height: -moz-fit-content;
+}
+
+.follow a {
+    color: white;
+}
+
+.postDetail{
+    background: #852BA3;
+    width: 50%;
+    padding: 25px;
+    border-radius: 30px;
+    color: white;
+    height: fit-content;
+    overflow-x: auto;
+    height: -moz-fit-content;
+}
+
+.postDetail a{
+    color: white;
+}
+
+.postDetail p{
+    word-break: break-word;
+}
+
+.createPost{
+    width: 50%;
+    background: #852BA3;
+    color: white;
+    padding: 25px;
+    border-radius: 30px;
+    height: fit-content;
+    height: -moz-fit-content;
+}
+
+
+.updateProfile{
+    width: 50%;
+    background: #852BA3;
+    color: white;
+    padding: 25px;
+    border-radius: 30px;
+    height: fit-content;
+    height: -moz-fit-content;
+}
+
+
+.logIn{
+    width: 50%;
+    background: #852BA3;
+    color: white;
+    padding: 25px;
+    border-radius: 30px;
+    height: fit-content;
+    height: -moz-fit-content;
+}
+
+.signUp{
+    width: 50%;
+    background: #852BA3;
+    color: white;
+    padding: 25px;
+    border-radius: 30px;
+    height: fit-content;
+    height: -moz-fit-content;
+}
+
+.verification{
+    width: 50%;
+    background: #852BA3;
+    color: white;
+    padding: 25px;
+    border-radius: 30px;
+    height: fit-content;
+    height: -moz-fit-content;
+}

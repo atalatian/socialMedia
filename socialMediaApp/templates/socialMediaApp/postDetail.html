@@ -1,31 +1,57 @@
 {% extends 'socialMediaApp/base.html' %}
+{% load static %}
 
 {% block title %}
     Post Detail
 {% endblock %}
 
 {% block nav %}
+    <ul>
+        <li><a href="{% url 'signUp' %}">Sign Up</a></li>
+        <li><a href="{% url 'logIn' %}">Log In</a></li>
+    </ul>
 {% endblock %}
 
 {% block body %}
-    <h1>{{ user.djangoUser.username }} Post:</h1>
-    <div>
-        <h1>Title: </h1>
-        <p>{{ object.title }}</p>
-        <h1>Description: </h1>
-        <p>{{ object.description }}</p>
-        <h1>Comments: </h1>
+    <div class="postDetail">
+        <h1>{{ user.djangoUser.username }} Post:</h1>
         <div>
-            {% for comment in comments %}
-                <h3>{{ comment.user.djangoUser.username }} Says: </h3>
-                <p>{{ comment.body }}</p>
-                <a href="{% url 'commentDelete' object.user.pk object.pk %}">
-                        Delete Comment
-                </a>
-            {% endfor %}
+            <h1>Title: </h1>
+            <p>{{ object.title }}</p>
+            {% if object.description %}
+                <h1>Description: </h1>
+                <p>{{ object.description }}</p>
+            {% endif %}
+            {% if object.image %}
+                <h1>Image: </h1>
+                <div><img width="100%" src="{{ object.image.url }}" alt="postImage"></div>
+            {% endif %}
+            <h1>Comments: </h1>
+            <div>
+                {% for comment in comments %}
+                    <h3>{{ comment.user.djangoUser.username }} Says: </h3>
+                    <p>{{ comment.body }}</p>
+                    <a href="{% url 'commentDelete' object.user.pk object.pk %}">
+                            Delete Comment
+                    </a>
+                {% endfor %}
+            </div>
+            <h1>Like: {{ object.likes_count }}</h1>
+
         </div>
-        <h1>Like: {{ object.likes_count }}</h1>
-        <a href="{% url 'postUpdate' object.user.pk object.pk %}">Edit Post</a>
-        <a href="{% url 'postDelete' object.user.pk object.pk %}">Delete Post</a>
     </div>
+{% endblock %}
+
+{% block sidebar %}
+    <ul>
+        <li>
+            <a href="{% url 'profile' object.user.pk %}">Back to profile</a>
+        </li>
+        <li>
+            <a href="{% url 'postUpdate' object.user.pk object.pk %}">Edit Post</a>
+        </li>
+        <li>
+            <a href="{% url 'postDelete' object.user.pk object.pk %}">Delete Post</a>
+        </li>
+    </ul>
 {% endblock %}

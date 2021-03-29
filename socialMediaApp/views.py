@@ -1,16 +1,21 @@
-import json
+import random
 
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import logout, authenticate
 from django.contrib.auth.models import User as DjangoUser
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import HttpResponse, HttpResponseRedirect
+from django.core.mail import send_mail
+from django.shortcuts import HttpResponse, HttpResponseRedirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
-from django.views.generic.edit import FormView, FormMixin, DeleteView
+from django.views.generic.edit import FormView, FormMixin
+from kavenegar import *
 
-from .forms import PostForm, SearchForm, UserSignUpForm, PostCommentForm, UserUpdateForm, UserEnterForm
+from socialMedia.settings import EMAIL_HOST_USER
+from .auth import myLogin
+from .forms import PostForm, SearchForm, UserSignUpForm, \
+    PostCommentForm, UserUpdateForm, UserEnterForm, tokenForm
 from .models import Post, User, UserJoin, Comment, Like
 
 
@@ -24,22 +29,34 @@ class UserSignUp(FormView):
     form_class = UserSignUpForm
     template_name = 'socialMediaApp/signUp.html'
 
-    def form_valid(self, form):
-        djangoUser = DjangoUser.objects.create_user(username=form.cleaned_data['email'],
-                                                    email=form.cleaned_data['email'],
-                                                    password=form.cleaned_data['password'])
+    def get_context_data(self, **kwargs):
+        context = super(UserSignUp, self).get_context_data(**kwargs)
+        context['user'] = None
+        if self.request.user.is_authenticated and not self.request.user.is_superuser:
+            context['user'] = User.objects.get(djangoUser=self.request.user)
+        return context
 
+    def form_valid(self, form):
+        if form.cleaned_data['loginWithPhoneNumber']:
+            djangoUser = DjangoUser.objects.create_user(username=form.cleaned_data['phoneNumber'],
+                                                        email=form.cleaned_data['email'],
+                                                        password=form.cleaned_data['password'])
+        else:
+            djangoUser = DjangoUser.objects.create_user(username=form.cleaned_data['email'],
+                                                        email=form.cleaned_data['email'],
+                                                        password=form.cleaned_data['password'])
         user = User(djangoUser=djangoUser,
+                    phoneNumber=form.cleaned_data['phoneNumber'],
                     firstName=form.cleaned_data['firstName'],
                     lastName=form.cleaned_data['lastName'],
                     gender=form.cleaned_data['gender'],
                     bio=form.cleaned_data['bio'],
-                    website=form.cleaned_data['website'])
+                    website=form.cleaned_data['website'],
+                    loginWithPhoneNumber=form.cleaned_data['loginWithPhoneNumber'])
 
         djangoUser.save()
         user.save()
-        login(self.request, djangoUser)
-        self.success_url = reverse_lazy('profile', kwargs={'pk': user.pk})
+        self.success_url = reverse_lazy('verificationRedirect', kwargs={'pk': user.pk})
         return super().form_valid(form)
 
 
@@ -59,6 +76,11 @@ class UserUpdate(FormView):
             'website': user.website,
         }
         return initial_dict
+
+    def get_context_data(self, **kwargs):
+        context = super(UserUpdate, self).get_context_data(**kwargs)
+        context['user_pk'] = self.kwargs['pk']
+        return context
 
     def form_valid(self, form):
         user = User.objects.get(pk=self.kwargs['pk'])
@@ -148,15 +170,23 @@ class UserEnter(FormView):
     form_class = UserEnterForm
     template_name = 'socialMediaApp/LogIn.html'
 
-    def get(self, request, *args, **kwargs):
-        logout(self.request)
-        return super().get(request, *args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super(UserEnter, self).get_context_data(**kwargs)
+        context['user'] = None
+        if self.request.user.is_authenticated and not self.request.user.is_superuser:
+            context['user'] = User.objects.get(djangoUser=self.request.user)
+
+        return context
 
     def form_valid(self, form):
-        djangoUser = authenticate(username=form.cleaned_data['email'], password=form.cleaned_data['password'])
+        djangoUser = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password'])
         user = User.objects.get(djangoUser=djangoUser)
-        login(self.request, djangoUser)
+        if self.request.user.is_authenticated:
+            logout(self.request)
+        login = myLogin(self.request, djangoUser)
         self.success_url = reverse_lazy('profile', kwargs={'pk': user.pk})
+        if not login:
+            self.success_url = reverse_lazy('verificationRedirect', kwargs={'pk': user.pk})
         return super(UserEnter, self).form_valid(form)
 
 
@@ -172,6 +202,7 @@ class PostCreate(FormView):
         post = Post.objects.create(
             title=form.cleaned_data['title'],
             description=form.cleaned_data['description'],
+            image=form.cleaned_data['image'],
             user_id=self.kwargs['pk']
         )
         post.save()
@@ -236,11 +267,10 @@ class ViewPostDetail(DetailView, FormMixin):
 
 
 class AutoCompleteView(View):
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         if request.is_ajax():
             q = request.GET.get('term', '').capitalize()
             search_qs = User.objects.filter(djangoUser__username__startswith=q)
-            print(search_qs)
             results = []
             for r in search_qs:
                 results.append(r.djangoUser.username)
@@ -319,13 +349,20 @@ class PostUpdate(FormView):
         initial = {
             'title': post.title,
             'description': post.description,
+            'image': post.image
         }
         return initial
+
+    def get_context_data(self, **kwargs):
+        context = super(PostUpdate, self).get_context_data(**kwargs)
+        context['post'] = Post.objects.get(pk=self.kwargs['post_pk'])
+        return context
 
     def form_valid(self, form):
         post = Post.objects.get(pk=self.kwargs['post_pk'])
         post.title = form.cleaned_data['title']
         post.description = form.cleaned_data['description']
+        post.image = form.cleaned_data['image']
         post.save()
         self.success_url = reverse_lazy('postDetail', kwargs=self.kwargs)
         return super(PostUpdate, self).form_valid(form)
@@ -336,3 +373,58 @@ class PostDelete(View):
         Post.objects.get(pk=self.kwargs['post_pk']).delete()
         return HttpResponseRedirect(reverse_lazy('profile',
                                                  kwargs={'pk': self.kwargs['pk']}))
+
+
+class Verification(FormView):
+    form_class = tokenForm
+    template_name = 'socialMediaApp/verification.html'
+    message = ""
+    token = random.randint(1000, 10000)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['message'] = self.message
+        return context
+
+    def get(self, request, *args, **kwargs):
+        if self.token:
+            user = User.objects.get(pk=self.kwargs['pk'])
+            if self.kwargs['type'] == "phone":
+                api = KavenegarAPI("504A3841396D48494457316D327548324B62396879413"
+                                   "3563650452B3575367255497443304F37573351593D")
+                params = {
+                    'sender': '1000596446',
+                    'receptor': str(user.phoneNumber),
+                    'message': str(self.token),
+                }
+                api.sms_send(params)
+                self.message = "We sent a code to your phone number"
+            elif self.kwargs['type'] == "email":
+                send_mail('Verification Code',
+                          str(self.token),
+                          EMAIL_HOST_USER, [user.djangoUser.email, ])
+                self.message = "We sent a code to your email."
+            return super(Verification, self).get(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+
+    def form_valid(self, form):
+        if str(form.cleaned_data['token']) == str(self.token):
+            user = User.objects.get(pk=self.kwargs['pk'])
+            user.verified = True
+            user.save()
+            self.success_url = reverse_lazy('logIn')
+        else:
+            self.message = "Code is wrong!"
+            return super(Verification, self).form_invalid(form)
+        return super(Verification, self).form_valid(form)
+
+
+class VerificationRedirect(RedirectView):
+    def get_redirect_url(self, *args, **kwargs):
+        user = User.objects.get(pk=self.kwargs['pk'])
+        if user.loginWithPhoneNumber:
+            urlType = 'phone'
+        else:
+            urlType = 'email'
+        return reverse_lazy('verification', kwargs={'pk': user.pk, 'type': urlType})

@@ -31,6 +31,10 @@ urlpatterns = [
          views.PostUpdate.as_view(), name='postUpdate'),
     path('profile/<int:pk>/postDetail/<int:post_pk>/delete',
          views.PostDelete.as_view(), name='postDelete'),
+    path('verification/<str:type>/<int:pk>/',
+         views.Verification.as_view(), name='verification'),
+    path('redirectToVerification/<int:pk>/',
+         views.VerificationRedirect.as_view(), name='verificationRedirect'),
 ]
 
 

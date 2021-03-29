@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,13 +9,26 @@
             type="text/javascript"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"
             type="text/javascript"></script>
+    <link rel="stylesheet" href="{% static 'socialMediaApp/styles.css' %}">
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
-    {% block nav %}
-    {% endblock %}
-    {% block body %}
-    {% endblock %}
+    <div class="wrapper">
+         <div class="navBar">
+            {% block nav %}
+            {% endblock %}
+        </div>
+        <div class="main_wrap">
+            <div class="sideBar">
+                {% block sidebar %}
+                {% endblock %}
+            </div>
+            <div class="body">
+                {% block body %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
 </body>
 {% block script %}
 {% endblock %}

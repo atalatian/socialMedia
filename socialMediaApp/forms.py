@@ -10,14 +10,16 @@ from django.contrib.auth.forms import UserCreationForm
 
 class UserSignUpForm(forms.Form):
     email = forms.EmailField(max_length=254, required=True)
+    phoneNumber = forms.CharField(max_length=255, required=True, label="Phone Number")
     password = forms.CharField(widget=forms.PasswordInput, max_length=255, required=True)
-    firstName = forms.CharField(max_length=255, required=False)
-    lastName = forms.CharField(max_length=255, required=False)
+    firstName = forms.CharField(max_length=255, required=False, label="First Name")
+    lastName = forms.CharField(max_length=255, required=False, label="Last Name")
     gender = forms.CharField(widget=forms.Select(choices=[(None, ''),
                                                           ('male', 'Male'),
                                                           ('female', 'Female')]), required=False)
     bio = forms.CharField(widget=forms.Textarea, required=False)
     website = forms.URLField(widget=forms.URLInput, required=False)
+    loginWithPhoneNumber = forms.BooleanField(required=False, label="Login With Phone Number?")
 
 
 class UserUpdateForm(forms.Form):
@@ -32,7 +34,7 @@ class UserUpdateForm(forms.Form):
 
 
 class UserEnterForm(forms.Form):
-    email = forms.EmailField(required=True, max_length=254)
+    username = forms.CharField(required=True, max_length=255)
     password = forms.CharField(required=True, max_length=255, widget=forms.PasswordInput)
 
 
@@ -53,6 +55,10 @@ class PostForm(ModelForm):
 
 class SearchForm(forms.Form):
     search = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'id': 'txtSearch'}))
+
+
+class tokenForm(forms.Form):
+    token = forms.CharField(max_length=255)
 
 
 class PostCommentForm(ModelForm):

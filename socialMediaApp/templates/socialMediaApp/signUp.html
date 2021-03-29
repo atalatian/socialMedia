@@ -3,13 +3,29 @@
 {% block title %}
     Sign Up
 {% endblock %}
+
+{% block nav %}
+    <ul>
+        <li><a href="{% url 'signUp' %}">Sign Up</a></li>
+        <li><a href="{% url 'logIn' %}">Log In</a></li>
+    </ul>
+{% endblock %}
+
+{% block sidebar %}
+    {% if user %}
+        <ul>
+            <li><a href="{% url 'profile' user.pk %}">Back to your profile</a></li>
+        </ul>
+    {% endif %}
+{% endblock %}
+
+
 {% block body %}
-    <div>
+    <div class="signUp">
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
             <input type="submit" value="Sign Up">
         </form>
-        <a href="{% url 'logIn' %}">Log In</a>
     </div>
 {% endblock %}
