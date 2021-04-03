@@ -112,6 +112,7 @@ venv.bak/
 .idea
 media
 images
+media/images
 
 # Spyder project settings
 .spyderproject
