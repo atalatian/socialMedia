@@ -4,7 +4,7 @@ from django.contrib.auth import logout, authenticate
 from django.contrib.auth.models import User as DjangoUser
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
-from django.shortcuts import HttpResponse, HttpResponseRedirect, render
+from django.shortcuts import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import DetailView
@@ -270,10 +270,10 @@ class AutoCompleteView(View):
     def get(self, request, *args, **kwargs):
         if request.is_ajax():
             q = request.GET.get('term', '').capitalize()
-            search_qs = User.objects.filter(djangoUser__username__startswith=q)
+            search_qs = User.objects.filter(djangoUser__email__startswith=q)
             results = []
             for r in search_qs:
-                results.append(r.djangoUser.username)
+                results.append(r.djangoUser.email)
             data = json.dumps(results)
         else:
             data = 'fail'

@@ -36,8 +36,14 @@
         <div>
             <h1>Title: </h1>
             <p>{{ object.title }}</p>
-            <h1>Description: </h1>
-            <p>{{ object.description }}</p>
+            {% if object.description %}
+                <h1>Description: </h1>
+                <p>{{ object.description }}</p>
+            {% endif %}
+            {% if object.image %}
+                <h1>Image: </h1>
+                <div><img width="100%" src="{{ object.image.url }}" alt="postImage"></div>
+            {% endif %}
         </div>
         <div>
             <h1>Post Comment</h1>
@@ -51,7 +57,7 @@
             <h1>Comments: </h1>
             <div>
                 {% for comment in comments %}
-                    <h3>{{ comment.user.djangoUser.username }} Says: </h3>
+                    <h3>{{ comment.user.djangoUser.email }} Says: </h3>
                     <ul>
                         <li>{{ comment.body }}</li>
                     </ul>

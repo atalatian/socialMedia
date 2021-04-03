@@ -62,7 +62,7 @@
             {% for followedUser in followedUsers %}
                 <h3>
                     <a href="{% url 'viewProfile' foreignUser_pk followedUser.following.pk %}">
-                        {{ followedUser.following }}
+                        {{ followedUser.following.djangoUser.email }}
                     </a>
                 </h3>
                 <ul>
@@ -96,7 +96,7 @@
                 {% for userFollower in userFollowers %}
                     <h3>
                         <a href="{% url 'viewProfile' foreignUser_pk userFollower.user.pk %}">
-                            {{ userFollower.user }}
+                            {{ userFollower.user.djangoUser.email }}
                         </a>
                     </h3>
                     <ul>
