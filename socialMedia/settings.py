@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'socialMediaApp',
-    'crispy_forms',
 ]
 
 PASSWORD_HASHERS = [
