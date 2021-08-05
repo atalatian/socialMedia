@@ -1,0 +1,48 @@
+{% extends 'socialMediaApp/base.html' %}
+
+{% block nav %}
+    <nav class="navbar navbar-expand-sm bg-info navbar-dark">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'signUp' %}">Sign Up</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'logIn' %}">Log In</a>
+        </li>
+      </ul>
+    </nav>
+{% endblock %}
+
+{% block title %}
+    Create Post
+{% endblock %}
+
+{% block body %}
+    <div class="col-12 col-sm-8 mt-3">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="form-group">
+                {{ form.title.errors }}
+                <label for={{ form.title.id_for_label }}>Title:</label>
+                {{ form.title }}
+            </div>
+            <div class="form-group">
+                {{ form.description.errors }}
+                <label for={{ form.description.id_for_label }}>Description:</label>
+                {{ form.description }}
+            </div>
+            <div class="form-group">
+                {{ form.image.errors }}
+                <label for={{ form.image.id_for_label }}>Image:</label>
+                {{ form.image }}
+            </div>
+            <button type="submit" class="btn btn-info" value="Create Post">Create Post</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block sidebar %}
+    <a href="{% url 'profile' user_pk %}" class="btn btn-warning mt-3 col-12"
+                   role="button" aria-pressed="true">Back to your profile</a>
+{% endblock %}

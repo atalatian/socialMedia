@@ -1,0 +1,81 @@
+{% extends 'socialMediaApp/base.html' %}
+{% load static %}
+
+{% block title %}
+    Post Detail
+{% endblock %}
+
+{% block nav %}
+    <nav class="navbar navbar-expand-sm bg-info navbar-dark">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+            <a href="#" class="nav-link text-white">{{ user.djangoUser.username }} Post</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'signUp' %}">Sign Up</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'logIn' %}">Log In</a>
+        </li>
+      </ul>
+    </nav>
+{% endblock %}
+
+{% block body %}
+    <div class="postDetail">
+        <div>
+            <div style="overflow: auto; background-color: #e9ecef;" class="col-12 d-flex
+            align-items-center justify-content-center mt-3">
+                {% if object.image %}
+                    <img src="{{ object.image.url }}" alt="postImage">
+                {% else %}
+                    <img src="{% static 'socialMediaApp/images/noImage.png' %}" alt="postImage">
+                {% endif %}
+            </div>
+            <div class="jumbotron rounded-0">
+              <h1 class="display-4">{{ object.title }}</h1>
+              {% if object.description %}
+                <p class="lead">{{ object.description }}</p>
+              {% endif %}
+              <hr class="my-4">
+              <h2 class="display-4">Comments: </h2>
+              <div>
+                {% if comments %}
+                    {% for comment in comments %}
+                        <div class="alert alert-info mt-3" role="alert">
+                            <h3>{{ comment.user.djangoUser.username }} Says: </h3>
+                            <ul>
+                                <li>{{ comment.body }}</li>
+                            </ul>
+                            <a href="{% url 'commentDelete' object.user.pk object.pk %}"
+                               class="btn btn-danger mt-3 col-12"
+                                role="button" aria-pressed="true">Delete Comment</a>
+                        </div>
+                        <hr class="my-4">
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-warning mt-3" role="alert">
+                        This post has no comment!
+                    </div>
+                {% endif %}
+              </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block sidebar %}
+        <a href="{% url 'profile' object.user.pk %}" class="btn btn-warning mt-3 col-12"
+               role="button" aria-pressed="true">Back to your profile</a>
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'postUpdate' object.user.pk object.pk %}"
+               class="btn btn-info mt-3 col-7"
+                   role="button" aria-pressed="true">Edit Post</a>
+            <a href="{% url 'postDelete' object.user.pk object.pk %}"
+               class="btn btn-danger mt-3 col-4"
+                   role="button" aria-pressed="true">Delete</a>
+        </div>
+        <div class="alert alert-info mt-3" role="alert">
+            Like: <span class="badge badge-light">{{ object.likes_count }}</span>
+        </div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'socialMediaApp/base.html' %}
+
+{% block title %}
+    Sign Up
+{% endblock %}
+
+{% block nav %}
+    <nav class="navbar navbar-expand-sm bg-info navbar-dark">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'signUp' %}">Sign Up</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'logIn' %}">Log In</a>
+        </li>
+      </ul>
+    </nav>
+{% endblock %}
+
+{% block sidebar %}
+    {% if user %}
+        <a href="{% url 'profile' user.pk %}" class="btn btn-warning mt-3 col-12"
+           role="button" aria-pressed="true">Back to your profile</a>
+    {% endif %}
+{% endblock %}
+
+
+{% block body %}
+    <div class="col-12 col-sm-8 mt-3">
+        <div class="signUp">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="form-group">
+                    {{ form.email.errors }}
+                    <label for="{{ form.email.id_for_label }}">Email:</label>
+                    {{ form.email }}
+                </div>
+                <div class="form-group">
+                    {{ form.phoneNumber.errors }}
+                    <label for="{{ form.phoneNumber.id_for_label }}">Phone Number:</label>
+                    {{ form.phoneNumber }}
+                </div>
+                <div class="form-group">
+                    {{ form.password.errors }}
+                    <label for="{{ form.password.id_for_label }}">Password:</label>
+                    {{ form.password }}
+                </div>
+                <div class="form-group">
+                    {{ form.firstName.errors }}
+                    <label for="{{ form.firstName.id_for_label }}">First Name:</label>
+                    {{ form.firstName }}
+                </div>
+                <div class="form-group">
+                    {{ form.lastName.errors }}
+                    <label for="{{ form.lastName.id_for_label }}">Last Name:</label>
+                    {{ form.lastName }}
+                </div>
+                <div class="form-group">
+                    {{ form.gender.errors }}
+                    <label for="{{ form.gender.id_for_label }}">Gender:</label>
+                    {{ form.gender }}
+                </div>
+                <div class="form-group">
+                    {{ form.bio.errors }}
+                    <label for="{{ form.bio.id_for_label }}">Bio:</label>
+                    {{ form.bio }}
+                </div>
+                <div class="form-group">
+                    {{ form.website.errors }}
+                    <label for="{{ form.website.id_for_label }}">Website:</label>
+                    {{ form.website }}
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        {{ form.loginWithPhoneNumber }}
+                        <label class="form-check-label" for="{{ form.loginWithPhoneNumber.id_for_label }}">
+                            Login With Phone Number?
+                        </label>
+                        {{ form.loginWithPhoneNumber.errors }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-info" value="Sign Up">Sign Up</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
