@@ -39,7 +39,7 @@
                      {% if post.image %}
                          <img src={{ post.image.url }} class="card-img-top" alt="post_image">
                      {% else %}
-                         <img src={% static 'socialMediaApp/images/noImage.png' %}
+                         <img src='https://i.ibb.co/vcSskpW/noImage.png'
                                       class="card-img-top" alt="post_image">
                      {% endif %}
                  </div>
@@ -64,7 +64,7 @@
             $(document).ready(function(){
                 $("#txtSearch").autocomplete({
                     source: "/ajax_calls/search/",
-                    minLength: 2,
+                    minLength: 1,
                   });
             });
     </script>
