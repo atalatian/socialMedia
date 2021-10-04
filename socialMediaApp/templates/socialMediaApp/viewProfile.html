@@ -1,0 +1,167 @@
+{% extends 'socialMediaApp/base.html' %}
+{% load timeProcess %}
+{% load static %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block nav %}
+    <nav class="navbar navbar-expand-sm bg-info navbar-dark">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+            <a href="#" class="nav-link text-white">{{ object.djangoUser.username }} Profile</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'signUp' %}">Sign Up</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'logIn' %}">Log In</a>
+        </li>
+      </ul>
+    </nav>
+{% endblock %}
+
+{% block sidebar %}
+    <a href="{% url 'profile' foreignUser_pk %}" class="btn btn-warning mt-3 col-12"
+       role="button" aria-pressed="true">Back to your profile</a>
+    <a href="{% url 'userFollow' foreignUser_pk object.pk %}" class="btn btn-warning mt-3 col-12"
+                   role="button" aria-pressed="true">{{ followText }}</a>
+    <div>
+        <div class="pos-f-t mt-3">
+              <div class="collapse" id="navbarToggleExternalContent">
+                <div class="bg-info p-4" style="word-break: break-word;">
+                    <h5 class="text-white">First Name: </h5>
+                    <p class="text-white">{{ object.firstName }}</p>
+                    <h5 class="text-white">Last Name: </h5>
+                    <p class="text-white">{{ object.lastName }}</p>
+                    <h5 class="text-white">Gender: </h5>
+                    <p class="text-white">{{ object.gender }}</p>
+                    <h5 class="text-white">Bio: </h5>
+                    <p class="text-white">{{ object.bio }}</p>
+                    <h5 class="text-white">Website: </h5>
+                    <p class="text-white">{{ object.website }}</p>
+                </div>
+              </div>
+              <nav class="navbar navbar-dark bg-info justify-content-center rounded">
+                <button class="navbar-toggler col-12 border-0 rounded-0 text-white" type="button"
+                        data-toggle="collapse" data-target="#navbarToggleExternalContent"
+                        aria-controls="navbarToggleExternalContent" aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  About
+                </button>
+              </nav>
+        </div>
+        <div class="pos-f-t mt-3">
+              <div class="collapse" id="navbarToggleExternalContent2">
+                <div class="bg-info p-4 text-white" style="word-break: break-word;">
+            {% if followedUsers|length == 0 %}
+                <div class="alert alert-warning" role="alert">
+                    This user doesnt' follow any user
+                </div>
+            {% else %}
+               <div class="alert alert-info" role="alert">
+                    {% for followedUser in followedUsers %}
+                        {{ followedUser.following.djangoUser.email }}
+                        <a class="btn btn-warning col-12 mt-3"
+                            href="{% url 'viewProfile' foreignUser_pk followedUser.following.pk %}">
+                            See Profile
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+                </div>
+              </div>
+              <nav class="navbar navbar-dark bg-info justify-content-center rounded">
+                <button class="navbar-toggler col-12 border-0 rounded-0 text-white" type="button"
+                        data-toggle="collapse" data-target="#navbarToggleExternalContent2"
+                        aria-controls="navbarToggleExternalContent" aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  Following
+                </button>
+              </nav>
+        </div>
+        <div class="pos-f-t mt-3">
+              <div class="collapse" id="navbarToggleExternalContent3">
+                <div class="bg-info p-4 text-white" style="word-break: break-word;">
+                    {% if userFollowers|length == 0 %}
+                        <div class="alert alert-warning" role="alert">
+                            This user doesn't have any followers
+                        </div>
+                    {% else %}
+                        {% for userFollower in userFollowers %}
+                            <h3>
+                                <a href="{% url 'viewProfile' foreignUser_pk userFollower.user.pk %}">
+                                    {{ userFollower.user.djangoUser.email }}
+                                </a>
+                            </h3>
+                            <ul>
+                                {% if userFollower.user.post_set.all|length > 0 %}
+                                    {% for post in userFollower.user.post_set.all %}
+                                        <li>
+                                            <a href="{% url 'viewPostDetail' foreignUser_pk userFollower.user.pk post.pk %}">
+                                                {{ post.title }}
+                                            </a>
+                                            <br/>
+                                            <a href="{% url 'viewPostDetail' foreignUser_pk userFollower.user.pk post.pk %}">
+                                                <button>Comment</button>
+                                            </a>
+                                            <a href="{% url 'postLike' foreignUser_pk post.pk %}">
+                                                <button>Like {{ post.likes_count }}</button>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="alert alert-warning" role="alert">
+                                      This user have no post.
+                                    </div>
+                                {% endif %}
+                            </ul>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+              </div>
+              <nav class="navbar navbar-dark bg-info justify-content-center rounded">
+                <button class="navbar-toggler col-12 border-0 rounded-0 text-white" type="button"
+                        data-toggle="collapse" data-target="#navbarToggleExternalContent3"
+                        aria-controls="navbarToggleExternalContent" aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  Followers
+                </button>
+              </nav>
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-lg-start
+     align-items-stretch flex-wrap justify-content-center">
+        {% if post_list|length > 0 %}
+            {% for post in post_list %}
+                 <div class="card mt-3 mr-3" style="width: 18rem;">
+                 <div class="d-flex align-items-center" style="height: 18rem;">
+                     {% if post.image %}
+                         <img src={{ post.image.url }} class="card-img-top" alt="post_image">
+                     {% else %}
+                         <img src={% static 'socialMediaApp/images/noImage.png' %}
+                                      class="card-img-top" alt="post_image">
+                     {% endif %}
+                 </div>
+                  <div class="card-body">
+                    <h5 class="card-title">{{ post.title }}</h5>
+                    <p class="card-text">{% timeProcess post.date %}</p>
+                    <a href="{% url 'viewPostDetail' foreignUser_pk object.pk post.pk %}"
+                       class="btn btn-info">Go to post</a>
+                  </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-warning mt-3" role="alert">
+              There is no post
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

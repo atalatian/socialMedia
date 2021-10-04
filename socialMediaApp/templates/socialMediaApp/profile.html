@@ -1,0 +1,204 @@
+{% extends 'socialMediaApp/base.html' %}
+{% load timeProcess %}
+{% load static %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block nav %}
+    <nav class="navbar navbar-expand-sm bg-info navbar-dark">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+            <a href="#" class="nav-link text-white">{{ object.djangoUser.email }} Profile</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'signUp' %}">Sign Up</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'logIn' %}">Log In</a>
+        </li>
+      </ul>
+        <form class="form-inline" method="post">
+            {% csrf_token %}
+            {{ form.no_field_errors }}
+            {{ form.search }}
+            <button type="submit" class="btn btn-warning ml-lg-2 mb-3 mb-sm-0 ml-2 ml-sm-0"
+                    value="Go">Go</button>
+        </form>
+    </nav>
+{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-lg-start
+     align-items-stretch flex-wrap justify-content-center">
+        {% if post_list|length > 0 %}
+            {% for post in post_list %}
+                 <div class="card mt-3 mr-3" style="width: 18rem;">
+                 <div class="d-flex align-items-center" style="height: 18rem;">
+                     {% if post.image %}
+                         <img src={{ post.image.url }} class="card-img-top" alt="post_image">
+                     {% else %}
+                         <img src={% static 'socialMediaApp/images/noImage.png' %}
+                                      class="card-img-top" alt="post_image">
+                     {% endif %}
+                 </div>
+                  <div class="card-body">
+                    <h5 class="card-title">{{ post.title }}</h5>
+                    <p class="card-text">{% timeProcess post.date %}</p>
+                    <a href="{% url 'postDetail' object.pk post.pk %}"
+                       class="btn btn-info">Go to post</a>
+                  </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-warning mt-3" role="alert">
+              There is no post
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        $(document).ready(function(){
+            $("#txtSearch").autocomplete({
+                source: "/ajax_calls/search/",
+                minLength: 1,
+              });
+        });
+    </script>
+{% endblock %}
+
+{% block sidebar %}
+    <div>
+        <div class="pos-f-t mt-3">
+              <div class="collapse" id="navbarToggleExternalContent">
+                <div class="bg-info p-4" style="word-break: break-word;">
+                    <h5 class="text-white">First Name: </h5>
+                    <p class="text-white">{{ object.firstName }}</p>
+                    <h5 class="text-white">Last Name: </h5>
+                    <p class="text-white">{{ object.lastName }}</p>
+                    <h5 class="text-white">Gender: </h5>
+                    <p class="text-white">{{ object.gender }}</p>
+                    <h5 class="text-white">Bio: </h5>
+                    <p class="text-white">{{ object.bio }}</p>
+                    <h5 class="text-white">Website: </h5>
+                    <p class="text-white">{{ object.website }}</p>
+                </div>
+              </div>
+              <nav class="navbar navbar-dark bg-info justify-content-center rounded">
+                <button class="navbar-toggler col-12 border-0 rounded-0 text-white" type="button"
+                        data-toggle="collapse" data-target="#navbarToggleExternalContent"
+                        aria-controls="navbarToggleExternalContent" aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  About
+                </button>
+              </nav>
+        </div>
+        <div class="pos-f-t mt-3">
+              <div class="collapse" id="navbarToggleExternalContent2">
+                <div class="bg-info p-4 text-white" style="word-break: break-word;">
+                    {% if followedUsers|length == 0 %}
+                        <div class="alert alert-warning" role="alert">
+                            This user doesnt' follow any user
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info" role="alert">
+                            {% for followedUser in followedUsers %}
+                                {{ followedUser.following.djangoUser.email }}
+                                <a class="btn btn-warning col-12 mt-3"
+                                    href="{% url 'viewProfile' object.pk followedUser.following.pk %}">
+                                    See Profile
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+              </div>
+              <nav class="navbar navbar-dark bg-info justify-content-center rounded">
+                <button class="navbar-toggler col-12 border-0 rounded-0 text-white" type="button"
+                        data-toggle="collapse" data-target="#navbarToggleExternalContent2"
+                        aria-controls="navbarToggleExternalContent" aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  Following
+                </button>
+              </nav>
+        </div>
+        <div class="pos-f-t mt-3">
+              <div class="collapse" id="navbarToggleExternalContent3">
+                <div class="bg-info p-4 text-white" style="word-break: break-word;">
+                    {% if userFollowers|length == 0 %}
+                        <div class="alert alert-warning" role="alert">
+                            This user doesn't have any followers
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info" role="alert">
+                        {% for userFollower in userFollowers %}
+                            {{ userFollower.user.djangoUser.email }}
+                            <a class="btn btn-warning col-12 mt-3"
+                                href="{% url 'viewProfile' object.pk userFollower.user.pk %}">
+                                See Profile
+                            </a>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+              </div>
+              <nav class="navbar navbar-dark bg-info justify-content-center rounded">
+                <button class="navbar-toggler col-12 border-0 rounded-0 text-white" type="button"
+                        data-toggle="collapse" data-target="#navbarToggleExternalContent3"
+                        aria-controls="navbarToggleExternalContent" aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  Followers
+                </button>
+              </nav>
+        </div>
+        <div class="pos-f-t mt-3">
+              <div class="collapse" id="navbarToggleExternalContent4">
+                <div class="bg-info p-4" style="word-break: break-word;">
+                    {% if requested %}
+                        {% for request in requested %}
+                            <div class="alert alert-info" role="alert">
+                                {{ request.user }}
+                                <a class="btn btn-warning col-12 mt-3"
+                                    href="{% url 'userRequest' object.pk request.user.pk %}">
+                                    Accept Request
+                                </a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-warning" role="alert">
+                            No requests right now.
+                        </div>
+                    {% endif %}
+                </div>
+              </div>
+              <nav class="navbar navbar-dark bg-info justify-content-center rounded">
+                <button class="navbar-toggler col-12 border-0 rounded-0 text-white" type="button"
+                        data-toggle="collapse" data-target="#navbarToggleExternalContent4"
+                        aria-controls="navbarToggleExternalContent" aria-expanded="false"
+                        aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+                  Requested
+                    {% if requested %}
+                        <span class="badge badge-warning">New</span>
+                    {% endif %}
+                </button>
+              </nav>
+        </div>
+            <a class="btn btn-warning col-12 mt-3"
+               href="{% url 'createPost' object.pk %}">Add a post</a>
+            <a class="btn btn-warning col-12 mt-3"
+               href="{% url 'userUpdate' object.pk %}">Edit Profile</a>
+    </div>
+{% endblock %}
+
+
+
+
+
+

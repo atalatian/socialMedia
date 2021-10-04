@@ -1,0 +1,64 @@
+{% extends 'socialMediaApp/base.html' %}
+
+{% block title %}
+    Edit Profile
+{% endblock %}
+
+{% block nav %}
+    <nav class="navbar navbar-expand-sm bg-info navbar-dark">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'signUp' %}">Sign Up</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'logIn' %}">Log In</a>
+        </li>
+      </ul>
+    </nav>
+{% endblock %}
+
+
+{% block body %}
+    <div class="col-12 col-sm-8 mt-3">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="form-group">
+                {{ form.password.errors }}
+                <label for={{ form.password.id_for_label }}>Password:</label>
+                {{ form.password }}
+            </div>
+            <div class="form-group">
+                {{ form.firstName.errors }}
+                <label for={{ form.firstName.id_for_label }}>First Name:</label>
+                {{ form.firstName }}
+            </div>
+            <div class="form-group">
+                {{ form.lastName.errors }}
+                <label for={{ form.lastName.id_for_label }}>Last Name:</label>
+                {{ form.lastName }}
+            </div>
+            <div class="form-group">
+                {{ form.gender.errors }}
+                <label for={{ form.gender.id_for_label }}>Gender:</label>
+                {{ form.gender }}
+            </div>
+            <div class="form-group">
+                {{ form.bio.errors }}
+                <label for={{ form.bio.id_for_label }}>Bio:</label>
+                {{ form.bio }}
+            </div>
+            <div class="form-group">
+                {{ form.website.errors }}
+                <label for={{ form.website.id_for_label }}>Website:</label>
+                {{ form.website }}
+            </div>
+            <button type="submit" class="btn btn-info" value="Save">Save</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block sidebar %}
+    <a href="{% url 'profile' user_pk %}" class="btn btn-warning mt-3 col-12"
+                   role="button" aria-pressed="true">Back to your profile</a>
+{% endblock %}

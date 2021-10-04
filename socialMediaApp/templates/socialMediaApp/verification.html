@@ -1,0 +1,43 @@
+{% extends 'socialMediaApp/base.html' %}
+
+{% block title %}
+    Verification
+{% endblock %}
+
+
+{% block nav %}
+    <nav class="navbar navbar-expand-sm bg-info navbar-dark">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'signUp' %}">Sign Up</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'logIn' %}">Log In</a>
+        </li>
+      </ul>
+    </nav>
+{% endblock %}
+
+{% block body %}
+    <div class="col-12 col-sm-8 mt-3">
+        <div class="alert alert-info" role="alert">
+            Please Verify yourself
+        </div>
+        <div>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <div class="form-group">
+                    {{ form.token.errors }}
+                    <label for={{ form.token.id_for_label }}>Token:</label>
+                    {{ form.token }}
+                </div>
+                <button type="submit" class="btn btn-info" value="Verify">Verify</button>
+            </form>
+        </div>
+        <div class="alert alert-warning mt-3" role="alert">
+            {{ message }}
+        </div>
+    </div>
+{% endblock %}
+
